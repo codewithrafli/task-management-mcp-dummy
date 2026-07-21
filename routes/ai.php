@@ -7,4 +7,6 @@ use Laravel\Mcp\Facades\Mcp;
 Mcp::local('task-management', TaskManagementServer::class);
 
 // Web (HTTP) server — reachable at POST /mcp/task-management for remote clients & MCP Inspector.
-Mcp::web('/mcp/task-management', TaskManagementServer::class);
+// Protected with Sanctum token auth and a dedicated rate limiter (see AppServiceProvider).
+Mcp::web('/mcp/task-management', TaskManagementServer::class)
+    ->middleware(['auth:sanctum', 'throttle:mcp']);

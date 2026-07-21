@@ -7,6 +7,7 @@ use App\Mcp\Resources\BoardsResource;
 use App\Mcp\Resources\TasksResource;
 use App\Mcp\Tools\CreateBoardTool;
 use App\Mcp\Tools\CreateTaskTool;
+use App\Mcp\Tools\DeleteTaskTool;
 use App\Mcp\Tools\MoveTaskTool;
 use App\Mcp\Tools\SearchTaskTool;
 use App\Mcp\Tools\UpdateTaskStatusTool;
@@ -31,6 +32,7 @@ class TaskManagementServer extends Server
         UpdateTaskStatusTool::class,
         MoveTaskTool::class,
         SearchTaskTool::class,
+        DeleteTaskTool::class,
     ];
 
     protected array $resources = [
