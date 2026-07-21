@@ -2,6 +2,7 @@
 
 namespace App\Mcp\Tools;
 
+use App\Http\Requests\StoreBoardRequest;
 use App\Services\BoardService;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\JsonSchema\Types\Type;
@@ -17,10 +18,7 @@ class CreateBoardTool extends Tool
 
     public function handle(Request $request): Response
     {
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'description' => ['nullable', 'string'],
-        ]);
+        $validated = $request->validate((new StoreBoardRequest)->rules());
 
         $board = $this->boards->create($validated);
 

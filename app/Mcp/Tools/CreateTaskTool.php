@@ -4,6 +4,7 @@ namespace App\Mcp\Tools;
 
 use App\Enums\TaskPriority;
 use App\Enums\TaskStatus;
+use App\Http\Requests\StoreTaskRequest;
 use App\Models\Board;
 use App\Services\TaskService;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
@@ -20,13 +21,7 @@ class CreateTaskTool extends Tool
 
     public function handle(Request $request): Response
     {
-        $validated = $request->validate([
-            'board_id' => ['required', 'integer', 'exists:boards,id'],
-            'title' => ['required', 'string', 'max:255'],
-            'description' => ['nullable', 'string'],
-            'status' => ['nullable', 'in:'.implode(',', TaskStatus::values())],
-            'priority' => ['nullable', 'in:'.implode(',', TaskPriority::values())],
-        ]);
+        $validated = $request->validate((new StoreTaskRequest)->rules());
 
         $task = $this->tasks->create([
             'board_id' => $validated['board_id'],
