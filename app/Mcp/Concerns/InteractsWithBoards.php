@@ -4,6 +4,7 @@ namespace App\Mcp\Concerns;
 
 use App\Models\Board;
 use App\Models\Task;
+use App\Models\User;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -23,7 +24,7 @@ trait InteractsWithBoards
     {
         $query = Board::query();
 
-        if ($user instanceof \App\Models\User) {
+        if ($user instanceof User) {
             $query->accessibleBy($user);
         }
 
@@ -37,7 +38,7 @@ trait InteractsWithBoards
     {
         $query = Task::query();
 
-        if ($user instanceof \App\Models\User) {
+        if ($user instanceof User) {
             $query->whereIn('board_id', $this->boardsQuery($user)->select('id'));
         }
 
@@ -52,7 +53,7 @@ trait InteractsWithBoards
             return null;
         }
 
-        if ($user instanceof \App\Models\User && ! $board->hasAccess($user)) {
+        if ($user instanceof User && ! $board->hasAccess($user)) {
             return null;
         }
 
@@ -67,7 +68,7 @@ trait InteractsWithBoards
             return null;
         }
 
-        if ($user instanceof \App\Models\User && ! $this->tasksQuery($user)->whereKey($task->id)->exists()) {
+        if ($user instanceof User && ! $this->tasksQuery($user)->whereKey($task->id)->exists()) {
             return null;
         }
 

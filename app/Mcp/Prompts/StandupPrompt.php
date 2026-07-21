@@ -32,7 +32,7 @@ class StandupPrompt extends Prompt
         return Response::text(
             "Write a concise daily standup update for {$audience} about the board "
             ."\"{$boardName}\".{$context} Group the update into three sections: "
-            ."Done, In Progress, and Blocked/Next. Keep it under 120 words and use bullet points."
+            .'Done, In Progress, and Blocked/Next. Keep it under 120 words and use bullet points.'
         );
     }
 

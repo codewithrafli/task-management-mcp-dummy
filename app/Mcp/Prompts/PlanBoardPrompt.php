@@ -17,8 +17,8 @@ class PlanBoardPrompt extends Prompt
 
         return Response::text(
             "You are a project planner. Break down the goal \"{$goal}\" into 5-8 concrete, "
-            ."actionable tasks. For each task suggest a priority (low, medium, high). "
-            ."Then use the create-task tool to add each task to the appropriate board."
+            .'actionable tasks. For each task suggest a priority (low, medium, high). '
+            .'Then use the create-task tool to add each task to the appropriate board.'
         );
     }
 

@@ -1,6 +1,5 @@
 <?php
 
-use App\Enums\TaskPriority;
 use App\Enums\TaskStatus;
 use App\Mcp\Prompts\StandupPrompt;
 use App\Mcp\Resources\BoardTasksResource;
