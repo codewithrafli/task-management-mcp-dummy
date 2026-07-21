@@ -3,9 +3,14 @@
 use App\Http\Controllers\AuthController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/login', [AuthController::class, 'show'])->name('login');
-Route::post('/login', [AuthController::class, 'login'])->name('login.store');
-Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+Route::middleware('guest')->group(function () {
+    Route::get('/login', [AuthController::class, 'show'])->name('login');
+    Route::post('/login', [AuthController::class, 'login'])->name('login.store');
+});
 
-Route::livewire('/', 'board-index')->name('boards.index');
-Route::livewire('/boards/{board}', 'board-show')->name('boards.show');
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middleware('auth');
+
+Route::middleware('auth')->group(function () {
+    Route::livewire('/', 'board-index')->name('boards.index');
+    Route::livewire('/boards/{board}', 'board-show')->name('boards.show');
+});
