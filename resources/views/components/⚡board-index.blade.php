@@ -21,6 +21,8 @@ new #[Layout('components.layouts.app')] class extends Component
         $boards->create($data);
 
         $this->reset('name', 'description');
+
+        $this->dispatch('board-created');
     }
 
     public function delete(Board $board, BoardService $boards): void
@@ -35,47 +37,78 @@ new #[Layout('components.layouts.app')] class extends Component
 };
 ?>
 
-<div class="mx-auto max-w-5xl px-4 py-8">
-    <div class="mb-5 flex items-baseline gap-2">
-        <h1 class="text-base font-semibold text-neutral-900">Boards</h1>
-        <span class="text-neutral-400">{{ $boards->count() }}</span>
+<div class="mx-auto max-w-5xl px-4 py-8" x-data="{ open: false }" @board-created.window="open = false">
+    <div class="mb-5 flex items-center justify-between">
+        <div class="flex items-baseline gap-2">
+            <h1 class="text-base font-semibold text-neutral-900">Boards</h1>
+            <span class="text-neutral-400">{{ $boards->count() }}</span>
+        </div>
+        <button @click="open = true"
+            class="rounded-md bg-neutral-900 px-3 py-1.5 font-medium text-white hover:bg-neutral-700">
+            Board baru
+        </button>
     </div>
 
-    {{-- Create board --}}
-    <form wire:submit="create" class="mb-6 flex flex-col gap-2 sm:flex-row">
-        <div class="flex-1">
-            <input type="text" wire:model="name" placeholder="Nama board (mis. Sprint Release)"
-                class="w-full rounded-md border border-neutral-200 bg-white px-3 py-2 placeholder:text-neutral-400 focus:border-neutral-400 focus:outline-none">
-            @error('name') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
-        </div>
-        <div class="flex-1">
-            <input type="text" wire:model="description" placeholder="Deskripsi (opsional)"
-                class="w-full rounded-md border border-neutral-200 bg-white px-3 py-2 placeholder:text-neutral-400 focus:border-neutral-400 focus:outline-none">
-        </div>
-        <button type="submit"
-            class="rounded-md bg-neutral-900 px-4 py-2 font-medium text-white hover:bg-neutral-700">
-            Buat board
-        </button>
-    </form>
-
-    {{-- Board list --}}
-    <div class="divide-y divide-neutral-200 overflow-hidden rounded-lg border border-neutral-200 bg-white">
+    {{-- Board cards --}}
+    <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         @forelse ($boards as $board)
-            <div class="group flex items-center gap-3 px-4 py-3 hover:bg-neutral-50">
-                <span class="font-mono text-xs text-neutral-400">{{ $board->code }}</span>
-                <a href="{{ route('boards.show', $board) }}" class="min-w-0 flex-1">
-                    <span class="font-medium text-neutral-900">{{ $board->name }}</span>
-                    @if ($board->description)
-                        <span class="ml-2 text-neutral-400">{{ $board->description }}</span>
-                    @endif
+            <div class="group relative rounded-lg border border-neutral-200 bg-white p-4 transition hover:border-neutral-300">
+                <a href="{{ route('boards.show', $board) }}" class="block">
+                    <div class="flex items-center gap-2">
+                        <span class="font-mono text-[11px] text-neutral-400">{{ $board->code }}</span>
+                    </div>
+                    <h3 class="mt-1 font-medium text-neutral-900">{{ $board->name }}</h3>
+                    <p class="mt-0.5 line-clamp-2 min-h-[2.5rem] text-neutral-400">{{ $board->description ?: 'Tanpa deskripsi' }}</p>
+                    <span class="mt-2 inline-block text-neutral-400">{{ $board->tasks_count }} task</span>
                 </a>
-                <span class="text-neutral-400">{{ $board->tasks_count }} task</span>
                 <button wire:click="delete({{ $board->id }})"
                     wire:confirm="Hapus board ini beserta semua task-nya?"
-                    class="text-neutral-300 opacity-0 transition hover:text-neutral-700 group-hover:opacity-100">&times;</button>
+                    class="absolute right-3 top-3 text-neutral-300 opacity-0 transition hover:text-neutral-700 group-hover:opacity-100">&times;</button>
             </div>
         @empty
-            <p class="px-4 py-10 text-center text-neutral-400">Belum ada board. Buat board pertamamu di atas.</p>
+            <div class="col-span-full rounded-lg border border-dashed border-neutral-300 px-4 py-12 text-center text-neutral-400">
+                Belum ada board.
+                <button @click="open = true" class="font-medium text-neutral-700 underline">Buat board pertamamu</button>.
+            </div>
         @endforelse
+    </div>
+
+    {{-- Create board modal --}}
+    <div x-cloak x-show="open" @keydown.escape.window="open = false"
+        class="fixed inset-0 z-30 flex items-start justify-center p-4 pt-24">
+        <div class="fixed inset-0 bg-neutral-900/30" @click="open = false"></div>
+
+        <div x-show="open"
+            x-transition:enter="transition ease-out duration-150"
+            x-transition:enter-start="opacity-0 translate-y-1"
+            x-transition:enter-end="opacity-100 translate-y-0"
+            class="relative w-full max-w-md rounded-lg border border-neutral-200 bg-white p-5 shadow-lg">
+            <h2 class="mb-4 font-semibold text-neutral-900">Board baru</h2>
+
+            <form wire:submit="create" class="space-y-3">
+                <div>
+                    <label class="mb-1 block text-neutral-500">Nama</label>
+                    <input type="text" wire:model="name" placeholder="mis. Sprint Release" x-ref="nameInput"
+                        class="w-full rounded-md border border-neutral-200 bg-white px-3 py-2 placeholder:text-neutral-400 focus:border-neutral-400 focus:outline-none">
+                    @error('name') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+                </div>
+                <div>
+                    <label class="mb-1 block text-neutral-500">Deskripsi <span class="text-neutral-300">(opsional)</span></label>
+                    <input type="text" wire:model="description" placeholder="Deskripsi singkat"
+                        class="w-full rounded-md border border-neutral-200 bg-white px-3 py-2 placeholder:text-neutral-400 focus:border-neutral-400 focus:outline-none">
+                </div>
+
+                <div class="mt-5 flex justify-end gap-2">
+                    <button type="button" @click="open = false"
+                        class="rounded-md border border-neutral-200 px-3 py-1.5 font-medium text-neutral-600 hover:bg-neutral-100">
+                        Batal
+                    </button>
+                    <button type="submit"
+                        class="rounded-md bg-neutral-900 px-3 py-1.5 font-medium text-white hover:bg-neutral-700">
+                        Buat board
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
