@@ -25,14 +25,20 @@ class DeleteTaskTool extends Tool
         }
 
         $validated = $request->validate([
-            'task_id' => ['required', 'integer', 'exists:tasks,id'],
+            'task' => ['required'],
         ]);
 
-        $task = Task::findOrFail($validated['task_id']);
+        $task = Task::resolveRef($validated['task']);
+
+        if ($task === null) {
+            return Response::error("Task \"{$validated['task']}\" not found.");
+        }
+
+        $code = $task->code;
         $title = $task->title;
         $this->tasks->delete($task);
 
-        return Response::text(sprintf('Task #%d "%s" deleted.', $validated['task_id'], $title));
+        return Response::text(sprintf('Task %s "%s" deleted.', $code, $title));
     }
 
     /**
@@ -41,8 +47,8 @@ class DeleteTaskTool extends Tool
     public function schema(JsonSchema $schema): array
     {
         return [
-            'task_id' => $schema->integer()
-                ->description('The id of the task to delete.')
+            'task' => $schema->string()
+                ->description('The task code (e.g. "SPR-1") or numeric id.')
                 ->required(),
         ];
     }

@@ -10,7 +10,7 @@ it('lets an admin delete a task', function () {
     $task = Task::factory()->create();
 
     TaskManagementServer::actingAs($admin)
-        ->tool(DeleteTaskTool::class, ['task_id' => $task->id])
+        ->tool(DeleteTaskTool::class, ['task' => $task->id])
         ->assertOk()
         ->assertSee('deleted');
 
@@ -22,7 +22,7 @@ it('forbids a non-admin from deleting a task', function () {
     $task = Task::factory()->create();
 
     TaskManagementServer::actingAs($user)
-        ->tool(DeleteTaskTool::class, ['task_id' => $task->id])
+        ->tool(DeleteTaskTool::class, ['task' => $task->id])
         ->assertHasErrors();
 
     $this->assertDatabaseHas('tasks', ['id' => $task->id]);

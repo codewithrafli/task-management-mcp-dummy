@@ -41,6 +41,7 @@ class ListTasksTool extends Tool
 
         $data = collect($paginator->items())->map(fn (Task $task) => [
             'id' => $task->id,
+            'code' => $task->code,
             'board_id' => $task->board_id,
             'assignee_id' => $task->assignee_id,
             'title' => $task->title,

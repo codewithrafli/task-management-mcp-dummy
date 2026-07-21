@@ -13,7 +13,7 @@ it('assigns a task to a user', function () {
     $task = Task::factory()->create(['assignee_id' => null]);
 
     TaskManagementServer::tool(AssignTaskTool::class, [
-        'task_id' => $task->id,
+        'task' => $task->id,
         'assignee_id' => $user->id,
     ])->assertOk()->assertSee('Budi');
 
@@ -24,7 +24,7 @@ it('unassigns a task when assignee_id is omitted', function () {
     $user = User::factory()->create();
     $task = Task::factory()->create(['assignee_id' => $user->id]);
 
-    TaskManagementServer::tool(AssignTaskTool::class, ['task_id' => $task->id])
+    TaskManagementServer::tool(AssignTaskTool::class, ['task' => $task->id])
         ->assertOk()->assertSee('unassigned');
 
     expect($task->refresh()->assignee_id)->toBeNull();

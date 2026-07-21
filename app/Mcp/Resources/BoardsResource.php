@@ -17,6 +17,7 @@ class BoardsResource extends Resource
     {
         $boards = $this->boards->all()->map(fn ($board) => [
             'id' => $board->id,
+            'code' => $board->code,
             'name' => $board->name,
             'description' => $board->description,
             'tasks_count' => $board->tasks_count,

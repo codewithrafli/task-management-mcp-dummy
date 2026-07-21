@@ -36,8 +36,8 @@ class CreateTaskTool extends Tool
         $board = Board::find($validated['board_id']);
 
         return Response::text(sprintf(
-            'Task #%d "%s" created in board "%s" (status: %s, priority: %s).',
-            $task->id,
+            'Task %s "%s" created in board "%s" (status: %s, priority: %s).',
+            $task->code,
             $task->title,
             $board->name,
             $task->status->value,

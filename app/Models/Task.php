@@ -8,12 +8,14 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Str;
 
 class Task extends Model
 {
     use HasFactory;
 
     protected $fillable = [
+        'code',
         'board_id',
         'assignee_id',
         'title',
@@ -23,6 +25,35 @@ class Task extends Model
         'due_date',
         'position',
     ];
+
+    protected static function booted(): void
+    {
+        static::creating(function (Task $task) {
+            if (blank($task->code)) {
+                $prefix = Board::find($task->board_id)?->code ?? 'TASK';
+                $seq = static::where('board_id', $task->board_id)->count() + 1;
+
+                do {
+                    $code = $prefix.'-'.$seq;
+                    $seq++;
+                } while (static::where('code', $code)->exists());
+
+                $task->code = $code;
+            }
+        });
+    }
+
+    /**
+     * Resolve a task by its human code (e.g. "SPR-1") or its numeric id.
+     */
+    public static function resolveRef(int|string $ref): ?self
+    {
+        if (ctype_digit((string) $ref)) {
+            return static::find((int) $ref);
+        }
+
+        return static::where('code', Str::upper((string) $ref))->first();
+    }
 
     protected function casts(): array
     {

@@ -20,18 +20,23 @@ class AssignTaskTool extends Tool
     public function handle(Request $request): Response
     {
         $validated = $request->validate([
-            'task_id' => ['required', 'integer', 'exists:tasks,id'],
+            'task' => ['required'],
             'assignee_id' => ['nullable', 'integer', 'exists:users,id'],
         ]);
 
-        $task = Task::findOrFail($validated['task_id']);
+        $task = Task::resolveRef($validated['task']);
+
+        if ($task === null) {
+            return Response::error("Task \"{$validated['task']}\" not found.");
+        }
+
         $user = isset($validated['assignee_id']) ? User::find($validated['assignee_id']) : null;
 
         $this->tasks->assign($task, $user);
 
         return Response::text($user
-            ? sprintf('Task #%d "%s" assigned to %s.', $task->id, $task->title, $user->name)
-            : sprintf('Task #%d "%s" is now unassigned.', $task->id, $task->title)
+            ? sprintf('Task %s "%s" assigned to %s.', $task->code, $task->title, $user->name)
+            : sprintf('Task %s "%s" is now unassigned.', $task->code, $task->title)
         );
     }
 
@@ -41,8 +46,8 @@ class AssignTaskTool extends Tool
     public function schema(JsonSchema $schema): array
     {
         return [
-            'task_id' => $schema->integer()
-                ->description('The id of the task to (re)assign.')
+            'task' => $schema->string()
+                ->description('The task code (e.g. "SPR-1") or numeric id to (re)assign.')
                 ->required(),
             'assignee_id' => $schema->integer()
                 ->description('The id of the user to assign. Omit to unassign.'),

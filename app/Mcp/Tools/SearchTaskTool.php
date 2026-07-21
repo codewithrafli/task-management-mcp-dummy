@@ -31,8 +31,8 @@ class SearchTaskTool extends Tool
         }
 
         $lines = $results->map(fn ($task) => sprintf(
-            '#%d [%s/%s] %s (board %d)',
-            $task->id,
+            '%s [%s/%s] %s (board %d)',
+            $task->code,
             $task->status->value,
             $task->priority->value,
             $task->title,

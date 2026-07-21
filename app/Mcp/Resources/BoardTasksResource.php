@@ -33,9 +33,12 @@ class BoardTasksResource extends Resource implements HasUriTemplate
             ->get()
             ->map(fn (Task $task) => [
                 'id' => $task->id,
+                'code' => $task->code,
+                'assignee_id' => $task->assignee_id,
                 'title' => $task->title,
                 'status' => $task->status->value,
                 'priority' => $task->priority->value,
+                'due_date' => $task->due_date?->toDateString(),
                 'position' => $task->position,
             ]);
 

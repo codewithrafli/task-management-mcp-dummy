@@ -12,7 +12,7 @@ it('updates a task status via the MCP tool', function () {
     $task = Task::factory()->create(['status' => TaskStatus::Todo->value]);
 
     TaskManagementServer::tool(UpdateTaskStatusTool::class, [
-        'task_id' => $task->id,
+        'task' => $task->id,
         'status' => TaskStatus::Done->value,
     ])->assertOk()->assertSee('done');
 
@@ -23,7 +23,7 @@ it('rejects an invalid status', function () {
     $task = Task::factory()->create();
 
     TaskManagementServer::tool(UpdateTaskStatusTool::class, [
-        'task_id' => $task->id,
+        'task' => $task->id,
         'status' => 'archived',
     ])->assertHasErrors();
 });
@@ -34,7 +34,7 @@ it('moves a task to another board via the MCP tool', function () {
     $task = Task::factory()->for($from)->create();
 
     TaskManagementServer::tool(MoveTaskTool::class, [
-        'task_id' => $task->id,
+        'task' => $task->id,
         'board_id' => $to->id,
     ])->assertOk()->assertSee('Done Board');
 

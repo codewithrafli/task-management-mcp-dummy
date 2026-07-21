@@ -5,15 +5,12 @@ namespace Database\Seeders;
 use App\Models\Board;
 use App\Models\Task;
 use App\Models\User;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Laravel\Passport\Client;
 use Laravel\Passport\ClientRepository;
 
 class DatabaseSeeder extends Seeder
 {
-    use WithoutModelEvents;
-
     /**
      * Seed the application's database.
      */

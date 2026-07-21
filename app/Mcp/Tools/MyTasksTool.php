@@ -31,8 +31,8 @@ class MyTasksTool extends Tool
         }
 
         $lines = $tasks->map(fn (Task $task) => sprintf(
-            '#%d [%s/%s]%s %s (board %d)',
-            $task->id,
+            '%s [%s/%s]%s %s (board %d)',
+            $task->code,
             $task->status->value,
             $task->priority->value,
             $task->due_date ? ' due '.$task->due_date->toDateString() : '',

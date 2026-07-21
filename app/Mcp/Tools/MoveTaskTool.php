@@ -20,18 +20,23 @@ class MoveTaskTool extends Tool
     public function handle(Request $request): Response
     {
         $validated = $request->validate([
-            'task_id' => ['required', 'integer', 'exists:tasks,id'],
+            'task' => ['required'],
             'board_id' => ['required', 'integer', 'exists:boards,id'],
             'position' => ['nullable', 'integer', 'min:0'],
         ]);
 
-        $task = Task::findOrFail($validated['task_id']);
+        $task = Task::resolveRef($validated['task']);
+
+        if ($task === null) {
+            return Response::error("Task \"{$validated['task']}\" not found.");
+        }
+
         $board = Board::findOrFail($validated['board_id']);
         $task = $this->tasks->move($task, $board, $validated['position'] ?? null);
 
         return Response::text(sprintf(
-            'Task #%d "%s" moved to board "%s" at position %d.',
-            $task->id,
+            'Task %s "%s" moved to board "%s" at position %d.',
+            $task->code,
             $task->title,
             $board->name,
             $task->position,
@@ -44,8 +49,8 @@ class MoveTaskTool extends Tool
     public function schema(JsonSchema $schema): array
     {
         return [
-            'task_id' => $schema->integer()
-                ->description('The id of the task to move.')
+            'task' => $schema->string()
+                ->description('The task code (e.g. "SPR-1") or numeric id.')
                 ->required(),
             'board_id' => $schema->integer()
                 ->description('The id of the destination board.')

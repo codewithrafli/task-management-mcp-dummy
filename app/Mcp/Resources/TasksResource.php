@@ -19,11 +19,14 @@ class TasksResource extends Resource
             ->get()
             ->map(fn (Task $task) => [
                 'id' => $task->id,
+                'code' => $task->code,
                 'board_id' => $task->board_id,
+                'assignee_id' => $task->assignee_id,
                 'title' => $task->title,
                 'description' => $task->description,
                 'status' => $task->status->value,
                 'priority' => $task->priority->value,
+                'due_date' => $task->due_date?->toDateString(),
                 'position' => $task->position,
             ]);
 

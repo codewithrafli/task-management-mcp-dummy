@@ -20,16 +20,21 @@ class UpdateTaskStatusTool extends Tool
     public function handle(Request $request): Response
     {
         $validated = $request->validate([
-            'task_id' => ['required', 'integer', 'exists:tasks,id'],
+            'task' => ['required'],
             'status' => ['required', 'in:'.implode(',', TaskStatus::values())],
         ]);
 
-        $task = Task::findOrFail($validated['task_id']);
+        $task = Task::resolveRef($validated['task']);
+
+        if ($task === null) {
+            return Response::error("Task \"{$validated['task']}\" not found.");
+        }
+
         $task = $this->tasks->changeStatus($task, TaskStatus::from($validated['status']));
 
         return Response::text(sprintf(
-            'Task #%d "%s" status updated to "%s".',
-            $task->id,
+            'Task %s "%s" status updated to "%s".',
+            $task->code,
             $task->title,
             $task->status->value,
         ));
@@ -41,8 +46,8 @@ class UpdateTaskStatusTool extends Tool
     public function schema(JsonSchema $schema): array
     {
         return [
-            'task_id' => $schema->integer()
-                ->description('The id of the task to update.')
+            'task' => $schema->string()
+                ->description('The task code (e.g. "SPR-1") or numeric id.')
                 ->required(),
             'status' => $schema->string()
                 ->description('New status. One of: '.implode(', ', TaskStatus::values()).'.')
