@@ -9,7 +9,7 @@
 </head>
 <body class="min-h-screen bg-neutral-50 font-sans text-[13px] text-neutral-900 antialiased">
     <header class="sticky top-0 z-20 border-b border-neutral-200 bg-white">
-        <div class="mx-auto flex h-12 max-w-7xl items-center justify-between px-4">
+        <div class="mx-auto flex h-12 max-w-7xl items-center justify-between px-6">
             <a href="/" class="flex items-center gap-2 font-semibold tracking-tight">
                 <span class="grid h-5 w-5 place-items-center rounded bg-neutral-900 text-[11px] font-bold text-white">T</span>
                 TaskFlow

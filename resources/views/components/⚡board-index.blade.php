@@ -37,7 +37,7 @@ new #[Layout('components.layouts.app')] class extends Component
 };
 ?>
 
-<div class="mx-auto max-w-5xl px-4 py-8" x-data="{ open: false }" @board-created.window="open = false">
+<div class="mx-auto max-w-7xl px-6 py-8" x-data="{ open: false }" @board-created.window="open = false">
     <div class="mb-5 flex items-center justify-between">
         <div class="flex items-baseline gap-2">
             <h1 class="text-base font-semibold text-neutral-900">Boards</h1>

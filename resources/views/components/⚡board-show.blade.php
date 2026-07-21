@@ -67,7 +67,8 @@ new #[Layout('components.layouts.app')] class extends Component
 
 <div class="flex h-[calc(100vh-3rem)] flex-col">
     {{-- Board header --}}
-    <div class="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-neutral-200 bg-white px-4 py-2.5">
+    <div class="border-b border-neutral-200 bg-white">
+    <div class="mx-auto flex max-w-7xl flex-wrap items-center gap-x-3 gap-y-2 px-6 py-2.5">
         <a href="{{ route('boards.index') }}" class="text-neutral-400 hover:text-neutral-700">Boards</a>
         <span class="text-neutral-300">/</span>
         <span class="font-mono text-xs text-neutral-400">{{ $board->code }}</span>
@@ -92,9 +93,10 @@ new #[Layout('components.layouts.app')] class extends Component
         </form>
         @error('title') <p class="w-full text-xs text-red-600">{{ $message }}</p> @enderror
     </div>
+    </div>
 
     {{-- Columns --}}
-    <div class="flex flex-1 gap-4 overflow-x-auto p-4">
+    <div class="mx-auto flex w-full max-w-7xl flex-1 gap-4 overflow-x-auto px-6 py-4">
         @foreach ($columns as $column)
             @php
                 $dot = match ($column) {
