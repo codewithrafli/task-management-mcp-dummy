@@ -4,6 +4,7 @@ use App\Enums\TaskPriority;
 use App\Enums\TaskStatus;
 use App\Models\Board;
 use App\Models\Task;
+use App\Models\User;
 use App\Services\TaskService;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Validate;
@@ -18,6 +19,19 @@ new #[Layout('components.layouts.app')] class extends Component
 
     #[Validate('required|in:low,medium,high')]
     public string $priority = 'medium';
+
+    // Task detail modal state.
+    public ?int $editingId = null;
+
+    public string $editTitle = '';
+
+    public string $editStatus = 'todo';
+
+    public string $editPriority = 'medium';
+
+    public ?string $editDueDate = null;
+
+    public ?int $editAssignee = null;
 
     public function mount(Board $board): void
     {
@@ -46,11 +60,52 @@ new #[Layout('components.layouts.app')] class extends Component
         $tasks->changeStatus($task, TaskStatus::from($status));
     }
 
+    public function openTask(int $taskId): void
+    {
+        $task = Task::where('board_id', $this->board->id)->findOrFail($taskId);
+
+        $this->editingId = $task->id;
+        $this->editTitle = $task->title;
+        $this->editStatus = $task->status->value;
+        $this->editPriority = $task->priority->value;
+        $this->editDueDate = $task->due_date?->toDateString();
+        $this->editAssignee = $task->assignee_id;
+
+        $this->dispatch('open-task');
+    }
+
+    public function saveTask(TaskService $tasks): void
+    {
+        $this->validate([
+            'editTitle' => ['required', 'string', 'max:255'],
+            'editStatus' => ['required', 'in:'.implode(',', TaskStatus::values())],
+            'editPriority' => ['required', 'in:'.implode(',', TaskPriority::values())],
+            'editDueDate' => ['nullable', 'date'],
+            'editAssignee' => ['nullable', 'integer', 'exists:users,id'],
+        ]);
+
+        $task = Task::where('board_id', $this->board->id)->findOrFail($this->editingId);
+
+        $tasks->update($task, [
+            'title' => $this->editTitle,
+            'status' => $this->editStatus,
+            'priority' => $this->editPriority,
+            'due_date' => $this->editDueDate ?: null,
+            'assignee_id' => $this->editAssignee ?: null,
+        ]);
+
+        $this->dispatch('close-task');
+    }
+
     public function deleteTask(int $taskId, TaskService $tasks): void
     {
         $task = Task::where('board_id', $this->board->id)->findOrFail($taskId);
 
         $tasks->delete($task);
+
+        if ($this->editingId === $taskId) {
+            $this->dispatch('close-task');
+        }
     }
 
     public function with(): array
@@ -60,12 +115,16 @@ new #[Layout('components.layouts.app')] class extends Component
         return [
             'columns' => TaskStatus::cases(),
             'tasksByStatus' => $tasks,
+            'users' => User::orderBy('name')->get(),
         ];
     }
 };
 ?>
 
-<div class="flex h-[calc(100vh-3rem)] flex-col">
+<div class="flex h-[calc(100vh-3rem)] flex-col"
+    x-data="{ open: false }"
+    @open-task.window="open = true"
+    @close-task.window="open = false">
     {{-- Board header --}}
     <div class="border-b border-neutral-200 bg-white">
     <div class="mx-auto flex max-w-7xl flex-wrap items-center gap-x-3 gap-y-2 px-6 py-2.5">
@@ -131,10 +190,11 @@ new #[Layout('components.layouts.app')] class extends Component
                             $overdue = $task->due_date && $task->due_date->isPast() && $task->status !== \App\Enums\TaskStatus::Done;
                         @endphp
                         <div wire:key="task-{{ $task->id }}" data-id="{{ $task->id }}"
-                            class="group cursor-grab rounded-md border border-neutral-200 bg-white p-2.5 hover:border-neutral-300 active:cursor-grabbing">
+                            wire:click="openTask({{ $task->id }})"
+                            class="group cursor-pointer rounded-md border border-neutral-200 bg-white p-2.5 hover:border-neutral-300 active:cursor-grabbing">
                             <div class="flex items-center justify-between">
                                 <span class="font-mono text-[11px] text-neutral-400">{{ $task->code }}</span>
-                                <button wire:click="deleteTask({{ $task->id }})"
+                                <button wire:click.stop="deleteTask({{ $task->id }})"
                                     class="text-neutral-300 opacity-0 transition group-hover:opacity-100 hover:text-neutral-700">&times;</button>
                             </div>
                             <p class="mt-1 text-neutral-800">{{ $task->title }}</p>
@@ -164,5 +224,80 @@ new #[Layout('components.layouts.app')] class extends Component
                 </div>
             </div>
         @endforeach
+    </div>
+
+    {{-- Task detail modal --}}
+    <div x-cloak x-show="open" @keydown.escape.window="open = false"
+        class="fixed inset-0 z-30 flex items-start justify-center p-4 pt-24">
+        <div class="fixed inset-0 bg-neutral-900/30" @click="open = false"></div>
+
+        <div x-show="open"
+            x-transition:enter="transition ease-out duration-150"
+            x-transition:enter-start="opacity-0 translate-y-1"
+            x-transition:enter-end="opacity-100 translate-y-0"
+            class="relative w-full max-w-lg rounded-lg border border-neutral-200 bg-white shadow-lg">
+            @if ($editingId)
+                <div class="flex items-center justify-between border-b border-neutral-200 px-5 py-3">
+                    <span class="font-mono text-xs text-neutral-400">{{ optional(\App\Models\Task::find($editingId))->code }}</span>
+                    <button @click="open = false" class="text-neutral-400 hover:text-neutral-700">&times;</button>
+                </div>
+
+                <div class="space-y-4 px-5 py-4">
+                    <div>
+                        <label class="mb-1 block text-neutral-500">Judul</label>
+                        <input type="text" wire:model="editTitle"
+                            class="w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-neutral-800 focus:border-neutral-400 focus:outline-none">
+                        @error('editTitle') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="mb-1 block text-neutral-500">Status</label>
+                            <select wire:model="editStatus"
+                                class="w-full rounded-md border border-neutral-200 bg-white px-2 py-2 text-neutral-700 focus:border-neutral-400 focus:outline-none">
+                                @foreach ($columns as $c)
+                                    <option value="{{ $c->value }}">{{ $c->label() }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div>
+                            <label class="mb-1 block text-neutral-500">Prioritas</label>
+                            <select wire:model="editPriority"
+                                class="w-full rounded-md border border-neutral-200 bg-white px-2 py-2 text-neutral-700 focus:border-neutral-400 focus:outline-none">
+                                @foreach (TaskPriority::cases() as $p)
+                                    <option value="{{ $p->value }}">{{ $p->label() }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div>
+                            <label class="mb-1 block text-neutral-500">Due date</label>
+                            <input type="date" wire:model="editDueDate"
+                                class="w-full rounded-md border border-neutral-200 bg-white px-2 py-2 text-neutral-700 focus:border-neutral-400 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="mb-1 block text-neutral-500">Assignee</label>
+                            <select wire:model="editAssignee"
+                                class="w-full rounded-md border border-neutral-200 bg-white px-2 py-2 text-neutral-700 focus:border-neutral-400 focus:outline-none">
+                                <option value="">— Tidak ada —</option>
+                                @foreach ($users as $u)
+                                    <option value="{{ $u->id }}">{{ $u->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between border-t border-neutral-200 px-5 py-3">
+                    <button wire:click="deleteTask({{ $editingId }})" wire:confirm="Hapus task ini?"
+                        class="text-red-600 hover:text-red-700">Hapus</button>
+                    <div class="flex gap-2">
+                        <button @click="open = false"
+                            class="rounded-md border border-neutral-200 px-3 py-1.5 font-medium text-neutral-600 hover:bg-neutral-100">Batal</button>
+                        <button wire:click="saveTask"
+                            class="rounded-md bg-neutral-900 px-3 py-1.5 font-medium text-white hover:bg-neutral-700">Simpan</button>
+                    </div>
+                </div>
+            @endif
+        </div>
     </div>
 </div>
