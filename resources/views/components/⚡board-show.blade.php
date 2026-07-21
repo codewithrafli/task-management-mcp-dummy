@@ -65,52 +65,49 @@ new #[Layout('components.layouts.app')] class extends Component
 };
 ?>
 
-<div class="flex h-[calc(100vh-3.25rem)] flex-col">
-    {{-- Board bar --}}
-    <div class="flex flex-wrap items-center gap-3 px-4 py-3 text-white sm:px-6">
-        <a href="{{ route('boards.index') }}" class="text-sm text-white/70 hover:text-white">&larr; Boards</a>
-        <span class="rounded bg-white/20 px-2 py-0.5 font-mono text-xs">{{ $board->code }}</span>
-        <h1 class="text-xl font-bold drop-shadow-sm">{{ $board->name }}</h1>
+<div class="flex h-[calc(100vh-3rem)] flex-col">
+    {{-- Board header --}}
+    <div class="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-neutral-200 bg-white px-4 py-2.5">
+        <a href="{{ route('boards.index') }}" class="text-neutral-400 hover:text-neutral-700">Boards</a>
+        <span class="text-neutral-300">/</span>
+        <span class="font-mono text-xs text-neutral-400">{{ $board->code }}</span>
+        <h1 class="font-semibold text-neutral-900">{{ $board->name }}</h1>
         @if ($board->description)
-            <span class="hidden text-sm text-white/70 md:inline">— {{ $board->description }}</span>
+            <span class="hidden text-neutral-400 md:inline">{{ $board->description }}</span>
         @endif
 
         <form wire:submit="addTask" class="ml-auto flex items-center gap-2">
-            <input type="text" wire:model="title" placeholder="Judul task baru…"
-                class="w-44 rounded-md border-0 bg-white/95 px-3 py-1.5 text-sm text-slate-800 placeholder:text-slate-400 focus:ring-2 focus:ring-white sm:w-56">
+            <input type="text" wire:model="title" placeholder="Task baru…"
+                class="w-40 rounded-md border border-neutral-200 bg-white px-2.5 py-1.5 text-neutral-800 placeholder:text-neutral-400 focus:border-neutral-400 focus:outline-none sm:w-52">
             <select wire:model="priority"
-                class="rounded-md border-0 bg-white/95 px-2 py-1.5 text-sm text-slate-800 focus:ring-2 focus:ring-white">
+                class="rounded-md border border-neutral-200 bg-white px-2 py-1.5 text-neutral-600 focus:border-neutral-400 focus:outline-none">
                 @foreach (TaskPriority::cases() as $p)
                     <option value="{{ $p->value }}">{{ $p->label() }}</option>
                 @endforeach
             </select>
             <button type="submit"
-                class="rounded-md bg-white px-3 py-1.5 text-sm font-semibold text-indigo-700 shadow hover:bg-white/90">
-                + Tambah
+                class="rounded-md bg-neutral-900 px-3 py-1.5 font-medium text-white hover:bg-neutral-700">
+                Tambah
             </button>
         </form>
+        @error('title') <p class="w-full text-xs text-red-600">{{ $message }}</p> @enderror
     </div>
-    @error('title') <p class="px-4 pb-1 text-xs text-amber-200 sm:px-6">{{ $message }}</p> @enderror
 
-    {{-- Lists --}}
-    <div class="flex flex-1 gap-3 overflow-x-auto px-4 pb-4 sm:px-6">
+    {{-- Columns --}}
+    <div class="flex flex-1 gap-4 overflow-x-auto p-4">
         @foreach ($columns as $column)
             @php
-                $accent = match ($column) {
-                    \App\Enums\TaskStatus::Todo => 'bg-slate-400',
-                    \App\Enums\TaskStatus::InProgress => 'bg-amber-400',
-                    \App\Enums\TaskStatus::Done => 'bg-emerald-400',
+                $dot = match ($column) {
+                    \App\Enums\TaskStatus::Todo => 'bg-neutral-400',
+                    \App\Enums\TaskStatus::InProgress => 'bg-amber-500',
+                    \App\Enums\TaskStatus::Done => 'bg-emerald-500',
                 };
             @endphp
-            <div class="flex max-h-full w-72 flex-none flex-col rounded-xl bg-slate-100/95 shadow-lg">
-                <div class="flex items-center justify-between px-3 py-2.5">
-                    <div class="flex items-center gap-2">
-                        <span class="h-2.5 w-2.5 rounded-full {{ $accent }}"></span>
-                        <h3 class="text-sm font-semibold text-slate-700">{{ $column->label() }}</h3>
-                    </div>
-                    <span class="rounded-full bg-slate-200 px-2 py-0.5 text-xs font-medium text-slate-600">
-                        {{ optional($tasksByStatus->get($column->value))->count() ?? 0 }}
-                    </span>
+            <div class="flex max-h-full w-72 flex-none flex-col">
+                <div class="mb-2 flex items-center gap-2 px-1">
+                    <span class="h-2 w-2 rounded-full {{ $dot }}"></span>
+                    <h3 class="font-medium text-neutral-700">{{ $column->label() }}</h3>
+                    <span class="text-neutral-400">{{ optional($tasksByStatus->get($column->value))->count() ?? 0 }}</span>
                 </div>
 
                 <div x-data
@@ -121,34 +118,36 @@ new #[Layout('components.layouts.app')] class extends Component
                         onAdd: (e) => $wire.updateStatus(e.item.dataset.id, '{{ $column->value }}'),
                     })"
                     x-ref="list"
-                    class="flex-1 space-y-2 overflow-y-auto px-2 pb-2">
+                    class="flex-1 space-y-1.5 overflow-y-auto rounded-lg bg-neutral-100/70 p-1.5">
                     @foreach ($tasksByStatus->get($column->value, []) as $task)
+                        @php
+                            $prioDot = match ($task->priority) {
+                                TaskPriority::Low => 'bg-neutral-300',
+                                TaskPriority::Medium => 'bg-amber-500',
+                                TaskPriority::High => 'bg-red-500',
+                            };
+                            $overdue = $task->due_date && $task->due_date->isPast() && $task->status !== \App\Enums\TaskStatus::Done;
+                        @endphp
                         <div wire:key="task-{{ $task->id }}" data-id="{{ $task->id }}"
-                            class="group cursor-grab rounded-lg bg-white p-3 shadow-sm ring-1 ring-slate-900/5 transition hover:shadow-md active:cursor-grabbing">
-                            <div class="flex items-start justify-between gap-2">
-                                <span class="font-mono text-[11px] font-medium text-slate-400">{{ $task->code }}</span>
+                            class="group cursor-grab rounded-md border border-neutral-200 bg-white p-2.5 hover:border-neutral-300 active:cursor-grabbing">
+                            <div class="flex items-center justify-between">
+                                <span class="font-mono text-[11px] text-neutral-400">{{ $task->code }}</span>
                                 <button wire:click="deleteTask({{ $task->id }})"
-                                    class="-mt-1 text-slate-300 opacity-0 transition group-hover:opacity-100 hover:text-red-500">&times;</button>
+                                    class="text-neutral-300 opacity-0 transition group-hover:opacity-100 hover:text-neutral-700">&times;</button>
                             </div>
-                            <p class="mt-0.5 text-sm text-slate-800">{{ $task->title }}</p>
-                            <div class="mt-2.5 flex flex-wrap items-center gap-1.5">
-                                <span @class([
-                                    'inline-block rounded px-1.5 py-0.5 text-[11px] font-semibold',
-                                    'bg-slate-100 text-slate-500' => $task->priority === TaskPriority::Low,
-                                    'bg-amber-100 text-amber-700' => $task->priority === TaskPriority::Medium,
-                                    'bg-red-100 text-red-700' => $task->priority === TaskPriority::High,
-                                ])>{{ $task->priority->label() }}</span>
+                            <p class="mt-1 text-neutral-800">{{ $task->title }}</p>
+                            <div class="mt-2 flex items-center gap-2 text-neutral-500">
+                                <span class="inline-flex items-center gap-1">
+                                    <span class="h-1.5 w-1.5 rounded-full {{ $prioDot }}"></span>
+                                    {{ $task->priority->label() }}
+                                </span>
 
                                 @if ($task->due_date)
-                                    <span @class([
-                                        'inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] font-medium',
-                                        'bg-red-100 text-red-700' => $task->due_date->isPast() && $task->status !== \App\Enums\TaskStatus::Done,
-                                        'bg-slate-100 text-slate-500' => ! ($task->due_date->isPast() && $task->status !== \App\Enums\TaskStatus::Done),
-                                    ])>📅 {{ $task->due_date->format('d M') }}</span>
+                                    <span class="{{ $overdue ? 'text-red-600' : '' }}">· {{ $task->due_date->format('d M') }}</span>
                                 @endif
 
                                 @if ($task->assignee)
-                                    <span class="ml-auto grid h-6 w-6 place-items-center rounded-full bg-indigo-500 text-[11px] font-semibold text-white"
+                                    <span class="ml-auto grid h-5 w-5 place-items-center rounded-full bg-neutral-200 text-[10px] font-medium text-neutral-600"
                                         title="{{ $task->assignee->name }}">
                                         {{ strtoupper(substr($task->assignee->name, 0, 1)) }}
                                     </span>
@@ -158,9 +157,7 @@ new #[Layout('components.layouts.app')] class extends Component
                     @endforeach
 
                     @if (($tasksByStatus->get($column->value)?->count() ?? 0) === 0)
-                        <p class="rounded-lg border border-dashed border-slate-300 py-6 text-center text-xs text-slate-400">
-                            Tarik task ke sini
-                        </p>
+                        <p class="px-2 py-6 text-center text-xs text-neutral-400">Kosong</p>
                     @endif
                 </div>
             </div>
