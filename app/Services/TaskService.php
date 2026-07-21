@@ -1,0 +1,54 @@
+<?php
+
+namespace App\Services;
+
+use App\Enums\TaskStatus;
+use App\Models\Board;
+use App\Models\Task;
+use Illuminate\Database\Eloquent\Collection;
+
+class TaskService
+{
+    public function create(array $data): Task
+    {
+        $data['position'] ??= (int) Task::where('board_id', $data['board_id'])
+            ->where('status', $data['status'] ?? TaskStatus::Todo->value)
+            ->max('position') + 1;
+
+        return Task::create($data);
+    }
+
+    public function update(Task $task, array $data): Task
+    {
+        $task->update($data);
+
+        return $task->refresh();
+    }
+
+    public function changeStatus(Task $task, TaskStatus $status): Task
+    {
+        return $this->update($task, ['status' => $status->value]);
+    }
+
+    public function move(Task $task, Board $board, ?int $position = null): Task
+    {
+        return $this->update($task, [
+            'board_id' => $board->id,
+            'position' => $position ?? (int) Task::where('board_id', $board->id)->max('position') + 1,
+        ]);
+    }
+
+    public function search(string $term, ?Board $board = null): Collection
+    {
+        return Task::query()
+            ->when($board, fn ($q) => $q->where('board_id', $board->id))
+            ->search($term)
+            ->orderBy('position')
+            ->get();
+    }
+
+    public function delete(Task $task): void
+    {
+        $task->delete();
+    }
+}

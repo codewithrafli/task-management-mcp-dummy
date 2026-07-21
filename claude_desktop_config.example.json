@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "task-management": {
+      "command": "php",
+      "args": [
+        "/Volumes/KINGSTON SNV3S500G Media/online-course/mcp-laravel/mcp-dummy/artisan",
+        "mcp:start",
+        "task-management"
+      ]
+    }
+  }
+}
