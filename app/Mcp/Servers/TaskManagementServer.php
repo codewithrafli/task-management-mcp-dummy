@@ -3,11 +3,15 @@
 namespace App\Mcp\Servers;
 
 use App\Mcp\Prompts\PlanBoardPrompt;
+use App\Mcp\Prompts\StandupPrompt;
 use App\Mcp\Resources\BoardsResource;
+use App\Mcp\Resources\BoardTasksResource;
 use App\Mcp\Resources\TasksResource;
+use App\Mcp\Tools\BulkCreateTasksTool;
 use App\Mcp\Tools\CreateBoardTool;
 use App\Mcp\Tools\CreateTaskTool;
 use App\Mcp\Tools\DeleteTaskTool;
+use App\Mcp\Tools\ListTasksTool;
 use App\Mcp\Tools\MoveTaskTool;
 use App\Mcp\Tools\SearchTaskTool;
 use App\Mcp\Tools\UpdateTaskStatusTool;
@@ -33,14 +37,18 @@ class TaskManagementServer extends Server
         MoveTaskTool::class,
         SearchTaskTool::class,
         DeleteTaskTool::class,
+        ListTasksTool::class,
+        BulkCreateTasksTool::class,
     ];
 
     protected array $resources = [
         BoardsResource::class,
         TasksResource::class,
+        BoardTasksResource::class,
     ];
 
     protected array $prompts = [
         PlanBoardPrompt::class,
+        StandupPrompt::class,
     ];
 }

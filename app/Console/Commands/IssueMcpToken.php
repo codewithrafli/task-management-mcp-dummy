@@ -8,7 +8,7 @@ use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 
 #[Signature('mcp:token {email : User email} {--name=mcp : Token label} {--admin : Make the user an admin if created}')]
-#[Description('Issue a Sanctum API token for accessing the MCP HTTP endpoint')]
+#[Description('Issue a Passport personal access token for the MCP HTTP endpoint')]
 class IssueMcpToken extends Command
 {
     public function handle(): int
