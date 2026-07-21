@@ -34,6 +34,10 @@ class AssignTaskTool extends Tool
             return Response::error("Task \"{$validated['task']}\" not found.");
         }
 
+        if (isset($validated['assignee_id']) && ! in_array($validated['assignee_id'], $task->board->teamIds(), true)) {
+            return Response::error('The assignee must be a member of the board.');
+        }
+
         $user = isset($validated['assignee_id']) ? User::find($validated['assignee_id']) : null;
 
         $this->tasks->assign($task, $user);

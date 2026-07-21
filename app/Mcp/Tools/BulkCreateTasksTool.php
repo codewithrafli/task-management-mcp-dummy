@@ -58,7 +58,7 @@ class BulkCreateTasksTool extends Tool
                     'progressToken' => $progressToken,
                     'progress' => $index + 1,
                     'total' => $total,
-                    'message' => "Created task \"{$title}\" ({$index}/{$total})",
+                    'message' => 'Created task "'.$title.'" ('.($index + 1).'/'.$total.')',
                 ]);
             }
         }

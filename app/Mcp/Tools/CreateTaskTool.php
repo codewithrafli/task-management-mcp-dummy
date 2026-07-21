@@ -31,6 +31,10 @@ class CreateTaskTool extends Tool
             return Response::error("Board #{$validated['board_id']} not found.");
         }
 
+        if (isset($validated['assignee_id']) && ! in_array($validated['assignee_id'], $board->teamIds(), true)) {
+            return Response::error('The assignee must be a member of the board.');
+        }
+
         $task = $this->tasks->create([
             'board_id' => $board->id,
             'assignee_id' => $validated['assignee_id'] ?? null,

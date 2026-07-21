@@ -57,7 +57,7 @@ new #[Layout('components.layouts.app')] class extends Component
     {{-- Board cards --}}
     <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         @forelse ($boards as $board)
-            <div class="group relative rounded-lg border border-neutral-200 bg-white p-4 transition hover:border-neutral-300">
+            <div wire:key="board-{{ $board->id }}" class="group relative rounded-lg border border-neutral-200 bg-white p-4 transition hover:border-neutral-300">
                 <a href="{{ route('boards.show', $board) }}" class="block">
                     <div class="flex items-center gap-2">
                         <span class="font-mono text-[11px] text-neutral-400">{{ $board->code }}</span>

@@ -29,7 +29,9 @@ it('only lists tasks on boards the authenticated user can access', function () {
 
 it('cannot modify a task on an inaccessible board', function () {
     $me = User::factory()->create();
-    $foreign = Task::factory()->for(Board::factory()->for(User::factory()->create()))->create();
+    $foreign = Task::factory()
+        ->for(Board::factory()->for(User::factory()->create()))
+        ->create(['status' => TaskStatus::Todo->value]);
 
     TaskManagementServer::actingAs($me)
         ->tool(UpdateTaskStatusTool::class, ['task' => $foreign->code, 'status' => 'done'])

@@ -8,9 +8,11 @@ use App\Models\Board;
 use App\Models\Task;
 use App\Models\User;
 
-it('assigns a task to a user', function () {
+it('assigns a task to a board member', function () {
+    $board = Board::factory()->create();
     $user = User::factory()->create(['name' => 'Budi']);
-    $task = Task::factory()->create(['assignee_id' => null]);
+    $board->members()->attach($user);
+    $task = Task::factory()->for($board)->create(['assignee_id' => null]);
 
     TaskManagementServer::tool(AssignTaskTool::class, [
         'task' => $task->id,
@@ -18,6 +20,18 @@ it('assigns a task to a user', function () {
     ])->assertOk()->assertSee('Budi');
 
     expect($task->refresh()->assignee_id)->toBe($user->id);
+});
+
+it('rejects assigning a non-member', function () {
+    $task = Task::factory()->create(['assignee_id' => null]);
+    $stranger = User::factory()->create();
+
+    TaskManagementServer::tool(AssignTaskTool::class, [
+        'task' => $task->id,
+        'assignee_id' => $stranger->id,
+    ])->assertHasErrors();
+
+    expect($task->refresh()->assignee_id)->toBeNull();
 });
 
 it('unassigns a task when assignee_id is omitted', function () {

@@ -82,12 +82,28 @@ class Board extends Model
      */
     public function team(): Collection
     {
-        return $this->members->push($this->user)->unique('id')->sortBy('name')->values();
+        // collect() clones the relation so we never mutate the cached members.
+        return collect($this->members->all())
+            ->push($this->user)
+            ->unique('id')
+            ->sortBy('name')
+            ->values();
     }
 
     public function hasAccess(User $user): bool
     {
-        return $this->user_id === $user->id || $this->members->contains($user);
+        return $this->user_id === $user->id
+            || $this->members()->whereKey($user->id)->exists();
+    }
+
+    /**
+     * Ids of everyone a task on this board may be assigned to (owner + members).
+     *
+     * @return array<int, int>
+     */
+    public function teamIds(): array
+    {
+        return $this->members()->pluck('users.id')->push($this->user_id)->unique()->all();
     }
 
     public function scopeOwnedBy(Builder $query, User $user): Builder

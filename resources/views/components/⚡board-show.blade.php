@@ -6,6 +6,7 @@ use App\Models\Board;
 use App\Models\Task;
 use App\Models\User;
 use App\Services\TaskService;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
@@ -22,6 +23,8 @@ new #[Layout('components.layouts.app')] class extends Component
 
     // Task detail modal state.
     public ?int $editingId = null;
+
+    public string $editCode = '';
 
     public string $editTitle = '';
 
@@ -57,6 +60,8 @@ new #[Layout('components.layouts.app')] class extends Component
 
     public function addTask(TaskService $tasks): void
     {
+        $this->authorize('update', $this->board);
+
         $data = $this->validate();
 
         $tasks->create([
@@ -77,6 +82,8 @@ new #[Layout('components.layouts.app')] class extends Component
      */
     public function reorderColumn(string $status, array $orderedIds, TaskService $tasks): void
     {
+        $this->authorize('update', $this->board);
+
         // Only touch tasks that actually belong to this board.
         $ids = Task::where('board_id', $this->board->id)
             ->whereIn('id', $orderedIds)
@@ -93,6 +100,7 @@ new #[Layout('components.layouts.app')] class extends Component
         $task = Task::where('board_id', $this->board->id)->findOrFail($taskId);
 
         $this->editingId = $task->id;
+        $this->editCode = $task->code;
         $this->editTitle = $task->title;
         $this->editStatus = $task->status->value;
         $this->editPriority = $task->priority->value;
@@ -104,13 +112,15 @@ new #[Layout('components.layouts.app')] class extends Component
 
     public function saveTask(TaskService $tasks): void
     {
+        $this->authorize('update', $this->board);
+
         $this->validate([
             'editTitle' => ['required', 'string', 'max:255'],
             'editStatus' => ['required', 'in:'.implode(',', TaskStatus::values())],
             'editPriority' => ['required', 'in:'.implode(',', TaskPriority::values())],
             'editDueDate' => ['nullable', 'date'],
-            'editAssignee' => ['nullable', 'integer', 'exists:users,id'],
-        ]);
+            'editAssignee' => ['nullable', 'integer', Rule::in($this->board->teamIds())],
+        ], ['editAssignee.in' => 'The assignee must be a member of this board.']);
 
         $task = Task::where('board_id', $this->board->id)->findOrFail($this->editingId);
 
@@ -127,6 +137,8 @@ new #[Layout('components.layouts.app')] class extends Component
 
     public function deleteTask(int $taskId, TaskService $tasks): void
     {
+        $this->authorize('update', $this->board);
+
         $task = Task::where('board_id', $this->board->id)->findOrFail($taskId);
 
         $tasks->delete($task);
@@ -499,7 +511,7 @@ new #[Layout('components.layouts.app')] class extends Component
             class="relative w-full max-w-lg rounded-lg border border-neutral-200 bg-white shadow-lg">
             @if ($editingId)
                 <div class="flex items-center justify-between border-b border-neutral-200 px-5 py-3">
-                    <span class="font-mono text-xs text-neutral-400">{{ optional(\App\Models\Task::find($editingId))->code }}</span>
+                    <span class="font-mono text-xs text-neutral-400">{{ $editCode }}</span>
                     <button @click="open = false" class="text-neutral-400 hover:text-neutral-700">&times;</button>
                 </div>
 

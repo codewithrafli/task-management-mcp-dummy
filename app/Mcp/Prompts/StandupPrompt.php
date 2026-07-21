@@ -2,7 +2,7 @@
 
 namespace App\Mcp\Prompts;
 
-use App\Models\Board;
+use App\Mcp\Concerns\InteractsWithBoards;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Attributes\Description;
@@ -12,13 +12,15 @@ use Laravel\Mcp\Server\Prompts\Argument;
 #[Description('Produce a daily standup summary prompt for a board: what is done, in progress, and blocked.')]
 class StandupPrompt extends Prompt
 {
+    use InteractsWithBoards;
+
     public function handle(Request $request): Response
     {
         $boardName = $request->get('board', 'the current board');
         $audience = $request->get('audience', 'the team');
 
         $context = '';
-        if ($board = Board::where('name', $boardName)->first()) {
+        if ($board = $this->boardsQuery($request->user())->where('name', $boardName)->first()) {
             $counts = $board->tasks()
                 ->selectRaw('status, count(*) as total')
                 ->groupBy('status')
