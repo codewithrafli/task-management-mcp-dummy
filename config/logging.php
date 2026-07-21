@@ -65,6 +65,15 @@ return [
             'replace_placeholders' => true,
         ],
 
+        // Dedicated channel for MCP observability: Log::channel('mcp')->info(...).
+        'mcp' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/mcp.log'),
+            'level' => env('LOG_LEVEL', 'info'),
+            'days' => env('LOG_DAILY_DAYS', 14),
+            'replace_placeholders' => true,
+        ],
+
         'daily' => [
             'driver' => 'daily',
             'path' => storage_path('logs/laravel.log'),

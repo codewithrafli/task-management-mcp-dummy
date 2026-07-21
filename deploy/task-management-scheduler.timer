@@ -1,0 +1,10 @@
+# /etc/systemd/system/task-management-scheduler.timer
+[Unit]
+Description=Run Task Management scheduler every minute
+
+[Timer]
+OnCalendar=*-*-* *:*:00
+AccuracySec=1s
+
+[Install]
+WantedBy=timers.target
