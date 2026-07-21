@@ -24,7 +24,7 @@ class IssueMcpToken extends Command
             ],
         );
 
-        $token = $user->createToken($this->option('name'))->plainTextToken;
+        $token = $user->createToken($this->option('name'))->accessToken;
 
         $this->info("Token for {$user->email} (admin: ".($user->is_admin ? 'yes' : 'no').'):');
         $this->line($token);

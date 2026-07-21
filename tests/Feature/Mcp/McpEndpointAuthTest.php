@@ -1,7 +1,7 @@
 <?php
 
 use App\Models\User;
-use Laravel\Sanctum\Sanctum;
+use Laravel\Passport\Passport;
 
 function initializePayload(): array
 {
@@ -23,7 +23,7 @@ it('rejects unauthenticated requests to the MCP HTTP endpoint', function () {
 });
 
 it('accepts requests authenticated with a Sanctum token', function () {
-    Sanctum::actingAs(User::factory()->create());
+    Passport::actingAs(User::factory()->create());
 
     $this->withHeaders(['Accept' => 'application/json, text/event-stream'])
         ->postJson('/mcp/task-management', initializePayload())
