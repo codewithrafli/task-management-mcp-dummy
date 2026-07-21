@@ -34,6 +34,11 @@ class RenameBoardTool extends Tool
             return Response::error("Board \"{$validated['board']}\" not found.");
         }
 
+        $actor = $request->user();
+        if ($actor !== null && $board->user_id !== $actor->id) {
+            return Response::error('Only the board owner can change board settings.');
+        }
+
         $changes = collect($validated)->except('board')->all();
 
         if ($changes === []) {

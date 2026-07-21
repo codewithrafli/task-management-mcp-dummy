@@ -29,4 +29,12 @@ class BoardPolicy
     {
         return $board->user_id === $user->id;
     }
+
+    /**
+     * Only the owner can change board settings (name, description).
+     */
+    public function manageSettings(User $user, Board $board): bool
+    {
+        return $board->user_id === $user->id;
+    }
 }

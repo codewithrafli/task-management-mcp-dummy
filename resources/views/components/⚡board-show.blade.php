@@ -150,7 +150,7 @@ new #[Layout('components.layouts.app')] class extends Component
 
     public function saveBoard(): void
     {
-        $this->authorize('update', $this->board);
+        $this->authorize('manageSettings', $this->board);
 
         $data = $this->validate([
             'boardName' => ['required', 'string', 'max:255'],
@@ -231,12 +231,16 @@ new #[Layout('components.layouts.app')] class extends Component
         <a href="{{ route('boards.index') }}" class="text-neutral-400 hover:text-neutral-700">Boards</a>
         <span class="text-neutral-300">/</span>
         <span class="font-mono text-xs text-neutral-400">{{ $board->code }}</span>
-        <button @click="settingsOpen = true" class="group/edit flex items-center gap-1.5">
-            <span class="font-semibold text-neutral-900 group-hover/edit:text-neutral-600">{{ $board->name }}</span>
-            <svg class="h-3.5 w-3.5 text-neutral-300 group-hover/edit:text-neutral-500" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6">
-                <path d="M4 13.5V16h2.5l7-7L11 6.5l-7 7zM12.5 5l2.5 2.5" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-        </button>
+        @if ($isOwner)
+            <button @click="settingsOpen = true" class="group/edit flex items-center gap-1.5">
+                <span class="font-semibold text-neutral-900 group-hover/edit:text-neutral-600">{{ $board->name }}</span>
+                <svg class="h-3.5 w-3.5 text-neutral-300 group-hover/edit:text-neutral-500" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6">
+                    <path d="M4 13.5V16h2.5l7-7L11 6.5l-7 7zM12.5 5l2.5 2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </button>
+        @else
+            <h1 class="font-semibold text-neutral-900">{{ $board->name }}</h1>
+        @endif
         @if ($board->description)
             <span class="hidden text-neutral-400 md:inline">{{ $board->description }}</span>
         @endif

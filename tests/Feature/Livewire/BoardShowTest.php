@@ -107,6 +107,21 @@ it('renames the board', function () {
         ->description->toBe('New desc');
 });
 
+it('forbids a member from renaming the board', function () {
+    $owner = User::factory()->create();
+    $member = User::factory()->create();
+    $board = Board::factory()->for($owner)->create(['name' => 'Original']);
+    $board->members()->attach($member);
+    $this->actingAs($member);
+
+    Livewire::test('board-show', ['board' => $board])
+        ->set('boardName', 'Hacked')
+        ->call('saveBoard')
+        ->assertForbidden();
+
+    expect($board->refresh()->name)->toBe('Original');
+});
+
 it('filters the board to only my tasks', function () {
     $mine = Task::factory()->for($this->board)->create(['assignee_id' => $this->user->id, 'title' => 'My task']);
     $other = Task::factory()->for($this->board)->create(['assignee_id' => null, 'title' => 'Other task']);
