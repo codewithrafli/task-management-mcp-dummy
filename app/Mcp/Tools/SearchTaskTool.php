@@ -2,8 +2,7 @@
 
 namespace App\Mcp\Tools;
 
-use App\Models\Board;
-use App\Services\TaskService;
+use App\Mcp\Concerns\InteractsWithBoards;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\JsonSchema\Types\Type;
 use Laravel\Mcp\Request;
@@ -14,7 +13,7 @@ use Laravel\Mcp\Server\Tool;
 #[Description('Search tasks by keyword in their title or description. Optionally limit to a single board.')]
 class SearchTaskTool extends Tool
 {
-    public function __construct(private readonly TaskService $tasks) {}
+    use InteractsWithBoards;
 
     public function handle(Request $request): Response
     {
@@ -23,8 +22,11 @@ class SearchTaskTool extends Tool
             'board_id' => ['nullable', 'integer', 'exists:boards,id'],
         ]);
 
-        $board = isset($validated['board_id']) ? Board::find($validated['board_id']) : null;
-        $results = $this->tasks->search($validated['query'], $board);
+        $results = $this->tasksQuery($request->user())
+            ->when($validated['board_id'] ?? null, fn ($q, $id) => $q->where('board_id', $id))
+            ->search($validated['query'])
+            ->orderBy('position')
+            ->get();
 
         if ($results->isEmpty()) {
             return Response::text('No tasks found for query "'.$validated['query'].'".');

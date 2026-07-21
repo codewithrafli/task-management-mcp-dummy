@@ -2,7 +2,7 @@
 
 namespace App\Mcp\Tools;
 
-use App\Models\Task;
+use App\Mcp\Concerns\InteractsWithBoards;
 use App\Models\User;
 use App\Services\TaskService;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
@@ -15,6 +15,8 @@ use Laravel\Mcp\Server\Tool;
 #[Description('Assign a task to a user, or unassign it. Pass assignee_id to assign, or omit it to unassign.')]
 class AssignTaskTool extends Tool
 {
+    use InteractsWithBoards;
+
     public function __construct(private readonly TaskService $tasks) {}
 
     public function handle(Request $request): Response
@@ -24,7 +26,7 @@ class AssignTaskTool extends Tool
             'assignee_id' => ['nullable', 'integer', 'exists:users,id'],
         ]);
 
-        $task = Task::resolveRef($validated['task']);
+        $task = $this->resolveTask($validated['task'], $request->user());
 
         if ($task === null) {
             return Response::error("Task \"{$validated['task']}\" not found.");

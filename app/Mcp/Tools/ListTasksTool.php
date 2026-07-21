@@ -4,6 +4,7 @@ namespace App\Mcp\Tools;
 
 use App\Enums\TaskPriority;
 use App\Enums\TaskStatus;
+use App\Mcp\Concerns\InteractsWithBoards;
 use App\Models\Task;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\JsonSchema\Types\Type;
@@ -15,6 +16,8 @@ use Laravel\Mcp\Server\Tool;
 #[Description('List tasks with optional filtering (board, status, priority) and pagination. Returns a page of tasks plus pagination metadata.')]
 class ListTasksTool extends Tool
 {
+    use InteractsWithBoards;
+
     public function handle(Request $request): Response
     {
         $validated = $request->validate([
@@ -29,7 +32,7 @@ class ListTasksTool extends Tool
 
         $perPage = $validated['per_page'] ?? 10;
 
-        $paginator = Task::query()
+        $paginator = $this->tasksQuery($request->user())
             ->when($validated['board_id'] ?? null, fn ($q, $id) => $q->where('board_id', $id))
             ->when($validated['assignee_id'] ?? null, fn ($q, $id) => $q->where('assignee_id', $id))
             ->when($validated['status'] ?? null, fn ($q, $s) => $q->where('status', $s))

@@ -2,18 +2,21 @@
 
 namespace App\Mcp\Resources;
 
+use App\Mcp\Concerns\InteractsWithBoards;
 use App\Models\Task;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Attributes\Description;
 use Laravel\Mcp\Server\Resource;
 
-#[Description('The list of all tasks across every board, ordered by board and position.')]
+#[Description('The tasks across every board the current user can access, ordered by board and position.')]
 class TasksResource extends Resource
 {
+    use InteractsWithBoards;
+
     public function handle(Request $request): Response
     {
-        $tasks = Task::query()
+        $tasks = $this->tasksQuery($request->user())
             ->orderBy('board_id')
             ->orderBy('position')
             ->get()

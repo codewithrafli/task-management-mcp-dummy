@@ -2,7 +2,7 @@
 
 namespace App\Mcp\Resources;
 
-use App\Models\Board;
+use App\Mcp\Concerns\InteractsWithBoards;
 use App\Models\Task;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
@@ -14,6 +14,8 @@ use Laravel\Mcp\Support\UriTemplate;
 #[Description('Tasks for a specific board, addressed dynamically by board id.')]
 class BoardTasksResource extends Resource implements HasUriTemplate
 {
+    use InteractsWithBoards;
+
     public function uriTemplate(): UriTemplate
     {
         return new UriTemplate('board://{boardId}/tasks');
@@ -22,7 +24,7 @@ class BoardTasksResource extends Resource implements HasUriTemplate
     public function handle(Request $request): Response
     {
         $boardId = (int) $request->get('boardId');
-        $board = Board::find($boardId);
+        $board = $this->resolveBoard($boardId, $request->user());
 
         if (! $board) {
             return Response::error("Board #{$boardId} not found.");

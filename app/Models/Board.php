@@ -48,6 +48,18 @@ class Board extends Model
         return $code;
     }
 
+    /**
+     * Resolve a board by its human code (e.g. "SPR") or its numeric id.
+     */
+    public static function resolveRef(int|string $ref): ?self
+    {
+        if (ctype_digit((string) $ref)) {
+            return static::find((int) $ref);
+        }
+
+        return static::where('code', Str::upper((string) $ref))->first();
+    }
+
     public function tasks(): HasMany
     {
         return $this->hasMany(Task::class);

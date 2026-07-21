@@ -2,8 +2,7 @@
 
 namespace App\Mcp\Tools;
 
-use App\Models\Board;
-use App\Models\Task;
+use App\Mcp\Concerns\InteractsWithBoards;
 use App\Services\TaskService;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\JsonSchema\Types\Type;
@@ -15,6 +14,8 @@ use Laravel\Mcp\Server\Tool;
 #[Description('Move a task to a different board, optionally at a given position.')]
 class MoveTaskTool extends Tool
 {
+    use InteractsWithBoards;
+
     public function __construct(private readonly TaskService $tasks) {}
 
     public function handle(Request $request): Response
@@ -25,13 +26,18 @@ class MoveTaskTool extends Tool
             'position' => ['nullable', 'integer', 'min:0'],
         ]);
 
-        $task = Task::resolveRef($validated['task']);
+        $task = $this->resolveTask($validated['task'], $request->user());
 
         if ($task === null) {
             return Response::error("Task \"{$validated['task']}\" not found.");
         }
 
-        $board = Board::findOrFail($validated['board_id']);
+        $board = $this->resolveBoard($validated['board_id'], $request->user());
+
+        if ($board === null) {
+            return Response::error("Destination board #{$validated['board_id']} not found.");
+        }
+
         $task = $this->tasks->move($task, $board, $validated['position'] ?? null);
 
         return Response::text(sprintf(

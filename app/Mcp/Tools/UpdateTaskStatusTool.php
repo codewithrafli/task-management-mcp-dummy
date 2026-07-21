@@ -3,7 +3,7 @@
 namespace App\Mcp\Tools;
 
 use App\Enums\TaskStatus;
-use App\Models\Task;
+use App\Mcp\Concerns\InteractsWithBoards;
 use App\Services\TaskService;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\JsonSchema\Types\Type;
@@ -15,6 +15,8 @@ use Laravel\Mcp\Server\Tool;
 #[Description('Update the status of an existing task (todo, in_progress or done).')]
 class UpdateTaskStatusTool extends Tool
 {
+    use InteractsWithBoards;
+
     public function __construct(private readonly TaskService $tasks) {}
 
     public function handle(Request $request): Response
@@ -24,7 +26,7 @@ class UpdateTaskStatusTool extends Tool
             'status' => ['required', 'in:'.implode(',', TaskStatus::values())],
         ]);
 
-        $task = Task::resolveRef($validated['task']);
+        $task = $this->resolveTask($validated['task'], $request->user());
 
         if ($task === null) {
             return Response::error("Task \"{$validated['task']}\" not found.");

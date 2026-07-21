@@ -3,6 +3,7 @@
 namespace App\Mcp\Tools;
 
 use App\Enums\TaskStatus;
+use App\Mcp\Concerns\InteractsWithBoards;
 use App\Services\TaskService;
 use Generator;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
@@ -15,6 +16,8 @@ use Laravel\Mcp\Server\Tool;
 #[Description('Create many tasks on a board at once. Streams progress notifications while working (long-running).')]
 class BulkCreateTasksTool extends Tool
 {
+    use InteractsWithBoards;
+
     public function __construct(private readonly TaskService $tasks) {}
 
     /**
@@ -27,6 +30,12 @@ class BulkCreateTasksTool extends Tool
             'titles' => ['required', 'array', 'min:1', 'max:50'],
             'titles.*' => ['required', 'string', 'max:255'],
         ]);
+
+        if ($this->resolveBoard($validated['board_id'], $request->user()) === null) {
+            yield Response::error("Board #{$validated['board_id']} not found.");
+
+            return;
+        }
 
         $titles = $validated['titles'];
         $total = count($titles);
