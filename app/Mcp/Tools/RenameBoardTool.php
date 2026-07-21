@@ -10,8 +10,10 @@ use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Attributes\Description;
 use Laravel\Mcp\Server\Tool;
+use Laravel\Mcp\Server\Tools\Annotations\IsIdempotent;
 
 #[Description('Rename a board or change its description. Reference the board by its code (e.g. "SPR") or numeric id.')]
+#[IsIdempotent]
 class RenameBoardTool extends Tool
 {
     use InteractsWithBoards;

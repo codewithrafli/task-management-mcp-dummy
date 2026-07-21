@@ -11,8 +11,10 @@ use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Attributes\Description;
 use Laravel\Mcp\Server\Tool;
+use Laravel\Mcp\Server\Tools\Annotations\IsDestructive;
 
 #[Description('Permanently delete a task. Requires an authorised (admin) user.')]
+#[IsDestructive]
 class DeleteTaskTool extends Tool
 {
     use InteractsWithBoards;

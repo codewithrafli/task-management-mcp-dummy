@@ -7,9 +7,13 @@ use App\Models\Board;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Attributes\Description;
+use Laravel\Mcp\Server\Attributes\MimeType;
+use Laravel\Mcp\Server\Attributes\Uri;
 use Laravel\Mcp\Server\Resource;
 
 #[Description('The list of boards the current user can access, with their task counts.')]
+#[Uri('tasks://boards')]
+#[MimeType('application/json')]
 class BoardsResource extends Resource
 {
     use InteractsWithBoards;

@@ -7,8 +7,10 @@ use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Attributes\Description;
 use Laravel\Mcp\Server\Tool;
+use Laravel\Mcp\Server\Tools\Annotations\IsReadOnly;
 
 #[Description('List the tasks assigned to the currently authenticated user. Use this for "my tasks" style questions.')]
+#[IsReadOnly]
 class MyTasksTool extends Tool
 {
     public function handle(Request $request): Response

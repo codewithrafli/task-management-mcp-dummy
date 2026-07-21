@@ -12,8 +12,10 @@ use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Attributes\Description;
 use Laravel\Mcp\Server\Tool;
+use Laravel\Mcp\Server\Tools\Annotations\IsIdempotent;
 
 #[Description('Update the editable fields of an existing task: title, description, status, priority and due date. Only the fields you pass are changed.')]
+#[IsIdempotent]
 class UpdateTaskTool extends Tool
 {
     use InteractsWithBoards;

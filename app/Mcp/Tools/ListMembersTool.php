@@ -9,8 +9,10 @@ use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Attributes\Description;
 use Laravel\Mcp\Server\Tool;
+use Laravel\Mcp\Server\Tools\Annotations\IsReadOnly;
 
 #[Description('List the members (owner + collaborators) of a board. These are the users a task on that board can be assigned to.')]
+#[IsReadOnly]
 class ListMembersTool extends Tool
 {
     use InteractsWithBoards;

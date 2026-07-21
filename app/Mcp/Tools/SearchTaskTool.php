@@ -9,8 +9,10 @@ use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Attributes\Description;
 use Laravel\Mcp\Server\Tool;
+use Laravel\Mcp\Server\Tools\Annotations\IsReadOnly;
 
 #[Description('Search tasks by keyword in their title or description. Optionally limit to a single board.')]
+#[IsReadOnly]
 class SearchTaskTool extends Tool
 {
     use InteractsWithBoards;

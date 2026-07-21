@@ -11,8 +11,10 @@ use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Attributes\Description;
 use Laravel\Mcp\Server\Tool;
+use Laravel\Mcp\Server\Tools\Annotations\IsIdempotent;
 
 #[Description('Assign a task to a user, or unassign it. Pass assignee_id to assign, or omit it to unassign.')]
+#[IsIdempotent]
 class AssignTaskTool extends Tool
 {
     use InteractsWithBoards;
