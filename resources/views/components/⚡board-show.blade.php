@@ -33,6 +33,9 @@ new #[Layout('components.layouts.app')] class extends Component
 
     public ?int $editAssignee = null;
 
+    // Member invite state.
+    public string $inviteEmail = '';
+
     public function mount(Board $board): void
     {
         $this->authorize('view', $board);
@@ -121,21 +124,54 @@ new #[Layout('components.layouts.app')] class extends Component
         }
     }
 
+    public function invite(): void
+    {
+        $this->authorize('manageMembers', $this->board);
+
+        $this->validate(['inviteEmail' => ['required', 'email', 'exists:users,email']]);
+
+        $user = User::where('email', $this->inviteEmail)->firstOrFail();
+
+        if ($user->id !== $this->board->user_id) {
+            $this->board->members()->syncWithoutDetaching([$user->id]);
+        }
+
+        $this->reset('inviteEmail');
+        $this->board->load('members');
+    }
+
+    public function removeMember(int $userId): void
+    {
+        $this->authorize('manageMembers', $this->board);
+
+        $this->board->members()->detach($userId);
+
+        // Unassign any tasks that were assigned to the removed member.
+        Task::where('board_id', $this->board->id)
+            ->where('assignee_id', $userId)
+            ->update(['assignee_id' => null]);
+
+        $this->board->load('members');
+    }
+
     public function with(): array
     {
+        $this->board->loadMissing('members');
+
         $tasks = $this->board->tasks()->with('assignee')->orderBy('position')->get()->groupBy(fn ($t) => $t->status->value);
 
         return [
             'columns' => TaskStatus::cases(),
             'tasksByStatus' => $tasks,
-            'users' => User::orderBy('name')->get(),
+            'team' => $this->board->team(),
+            'isOwner' => $this->board->user_id === auth()->id(),
         ];
     }
 };
 ?>
 
 <div class="flex h-[calc(100vh-3rem)] flex-col"
-    x-data="{ open: false, addOpen: false }"
+    x-data="{ open: false, addOpen: false, membersOpen: false }"
     @open-task.window="open = true"
     @close-task.window="open = false"
     @task-created.window="addOpen = false">
@@ -150,10 +186,28 @@ new #[Layout('components.layouts.app')] class extends Component
             <span class="hidden text-neutral-400 md:inline">{{ $board->description }}</span>
         @endif
 
-        <button @click="addOpen = true"
-            class="ml-auto rounded-md bg-neutral-900 px-3 py-1.5 font-medium text-white hover:bg-neutral-700">
-            Task baru
-        </button>
+        <div class="ml-auto flex items-center gap-2">
+            {{-- Team avatars --}}
+            <button @click="membersOpen = true" class="flex -space-x-1.5" title="Kelola anggota">
+                @foreach ($team->take(4) as $member)
+                    <span class="grid h-6 w-6 place-items-center rounded-full border border-white bg-neutral-200 text-[10px] font-medium text-neutral-600">
+                        {{ strtoupper(substr($member->name, 0, 1)) }}
+                    </span>
+                @endforeach
+                @if ($team->count() > 4)
+                    <span class="grid h-6 w-6 place-items-center rounded-full border border-white bg-neutral-100 text-[10px] text-neutral-500">+{{ $team->count() - 4 }}</span>
+                @endif
+            </button>
+
+            <button @click="membersOpen = true"
+                class="rounded-md border border-neutral-200 px-3 py-1.5 font-medium text-neutral-600 hover:bg-neutral-100">
+                Anggota
+            </button>
+            <button @click="addOpen = true"
+                class="rounded-md bg-neutral-900 px-3 py-1.5 font-medium text-white hover:bg-neutral-700">
+                Task baru
+            </button>
+        </div>
     </div>
     </div>
 
@@ -229,6 +283,56 @@ new #[Layout('components.layouts.app')] class extends Component
                 </div>
             </div>
         @endforeach
+    </div>
+
+    {{-- Members modal --}}
+    <div x-cloak x-show="membersOpen" @keydown.escape.window="membersOpen = false"
+        class="fixed inset-0 z-30 flex items-start justify-center p-4 pt-24">
+        <div class="fixed inset-0 bg-neutral-900/30" @click="membersOpen = false"></div>
+
+        <div x-show="membersOpen"
+            x-transition:enter="transition ease-out duration-150"
+            x-transition:enter-start="opacity-0 translate-y-1"
+            x-transition:enter-end="opacity-100 translate-y-0"
+            class="relative w-full max-w-md rounded-lg border border-neutral-200 bg-white p-5 shadow-lg">
+            <div class="mb-3 flex items-center justify-between">
+                <h2 class="font-semibold text-neutral-900">Anggota board</h2>
+                <button @click="membersOpen = false" class="text-neutral-400 hover:text-neutral-700">&times;</button>
+            </div>
+
+            <ul class="mb-4 divide-y divide-neutral-100">
+                @foreach ($team as $member)
+                    <li class="flex items-center gap-2 py-2">
+                        <span class="grid h-6 w-6 place-items-center rounded-full bg-neutral-200 text-[10px] font-medium text-neutral-600">
+                            {{ strtoupper(substr($member->name, 0, 1)) }}
+                        </span>
+                        <span class="text-neutral-800">{{ $member->name }}</span>
+                        <span class="text-neutral-400">{{ $member->email }}</span>
+                        @if ($member->id === $board->user_id)
+                            <span class="ml-auto rounded bg-neutral-100 px-1.5 py-0.5 text-[11px] text-neutral-500">Owner</span>
+                        @elseif ($isOwner)
+                            <button wire:click="removeMember({{ $member->id }})"
+                                class="ml-auto text-neutral-300 hover:text-red-600">&times;</button>
+                        @endif
+                    </li>
+                @endforeach
+            </ul>
+
+            @if ($isOwner)
+                <form wire:submit="invite" class="flex items-start gap-2">
+                    <div class="flex-1">
+                        <input type="email" wire:model="inviteEmail" placeholder="email@contoh.com"
+                            class="w-full rounded-md border border-neutral-200 bg-white px-3 py-2 placeholder:text-neutral-400 focus:border-neutral-400 focus:outline-none">
+                        @error('inviteEmail') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+                    </div>
+                    <button type="submit"
+                        class="rounded-md bg-neutral-900 px-3 py-2 font-medium text-white hover:bg-neutral-700">Undang</button>
+                </form>
+                <p class="mt-2 text-xs text-neutral-400">User harus sudah punya akun untuk diundang.</p>
+            @else
+                <p class="text-xs text-neutral-400">Hanya owner yang bisa mengelola anggota.</p>
+            @endif
+        </div>
     </div>
 
     {{-- Add task modal --}}
@@ -324,7 +428,7 @@ new #[Layout('components.layouts.app')] class extends Component
                             <select wire:model="editAssignee"
                                 class="w-full rounded-md border border-neutral-200 bg-white px-2 py-2 text-neutral-700 focus:border-neutral-400 focus:outline-none">
                                 <option value="">— Tidak ada —</option>
-                                @foreach ($users as $u)
+                                @foreach ($team as $u)
                                     <option value="{{ $u->id }}">{{ $u->name }}</option>
                                 @endforeach
                             </select>

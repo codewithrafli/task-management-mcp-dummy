@@ -18,6 +18,48 @@ it('forbids viewing a board owned by someone else', function () {
     Livewire::test('board-show', ['board' => $board])->assertForbidden();
 });
 
+it('allows a member to view the board', function () {
+    $owner = User::factory()->create();
+    $member = User::factory()->create();
+    $board = Board::factory()->for($owner)->create();
+    $board->members()->attach($member);
+
+    $this->actingAs($member);
+
+    Livewire::test('board-show', ['board' => $board])->assertOk();
+});
+
+it('lets the owner invite a member by email', function () {
+    $invitee = User::factory()->create(['email' => 'new@example.com']);
+
+    Livewire::test('board-show', ['board' => $this->board])
+        ->set('inviteEmail', 'new@example.com')
+        ->call('invite')
+        ->assertHasNoErrors();
+
+    expect($this->board->members()->whereKey($invitee->id)->exists())->toBeTrue();
+});
+
+it('rejects inviting an email without an account', function () {
+    Livewire::test('board-show', ['board' => $this->board])
+        ->set('inviteEmail', 'ghost@example.com')
+        ->call('invite')
+        ->assertHasErrors('inviteEmail');
+});
+
+it('forbids a member from managing members', function () {
+    $owner = User::factory()->create();
+    $member = User::factory()->create();
+    $board = Board::factory()->for($owner)->create();
+    $board->members()->attach($member);
+    $this->actingAs($member);
+
+    Livewire::test('board-show', ['board' => $board])
+        ->set('inviteEmail', User::factory()->create()->email)
+        ->call('invite')
+        ->assertForbidden();
+});
+
 it('adds a task to the board', function () {
     Livewire::test('board-show', ['board' => $this->board])
         ->set('title', 'Write docs')

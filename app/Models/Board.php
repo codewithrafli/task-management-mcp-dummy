@@ -6,7 +6,9 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
 class Board extends Model
@@ -56,8 +58,39 @@ class Board extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function members(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class)->withTimestamps();
+    }
+
+    /**
+     * Everyone who can be assigned tasks on this board: the owner plus members.
+     *
+     * @return Collection<int, User>
+     */
+    public function team(): Collection
+    {
+        return $this->members->push($this->user)->unique('id')->sortBy('name')->values();
+    }
+
+    public function hasAccess(User $user): bool
+    {
+        return $this->user_id === $user->id || $this->members->contains($user);
+    }
+
     public function scopeOwnedBy(Builder $query, User $user): Builder
     {
         return $query->where('user_id', $user->id);
+    }
+
+    /**
+     * Boards a user owns or is a member of.
+     */
+    public function scopeAccessibleBy(Builder $query, User $user): Builder
+    {
+        return $query->where(function (Builder $q) use ($user) {
+            $q->where('user_id', $user->id)
+                ->orWhereHas('members', fn (Builder $m) => $m->whereKey($user->id));
+        });
     }
 }

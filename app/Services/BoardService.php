@@ -14,11 +14,11 @@ class BoardService
     }
 
     /**
-     * Boards owned by a given user (used by the web UI).
+     * Boards a user owns or is a member of (used by the web UI).
      */
     public function forUser(User $user): Collection
     {
-        return Board::ownedBy($user)->withCount('tasks')->latest()->get();
+        return Board::accessibleBy($user)->withCount('tasks')->latest()->get();
     }
 
     public function create(array $data): Board

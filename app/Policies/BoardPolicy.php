@@ -9,15 +9,23 @@ class BoardPolicy
 {
     public function view(User $user, Board $board): bool
     {
-        return $board->user_id === $user->id;
+        return $board->hasAccess($user);
     }
 
     public function update(User $user, Board $board): bool
     {
-        return $board->user_id === $user->id;
+        return $board->hasAccess($user);
     }
 
     public function delete(User $user, Board $board): bool
+    {
+        return $board->user_id === $user->id;
+    }
+
+    /**
+     * Only the owner can invite or remove members.
+     */
+    public function manageMembers(User $user, Board $board): bool
     {
         return $board->user_id === $user->id;
     }

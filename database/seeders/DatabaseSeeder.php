@@ -31,10 +31,13 @@ class DatabaseSeeder extends Seeder
         $budi = User::factory()->create(['name' => 'Budi', 'email' => 'budi@example.com']);
         $ani = User::factory()->create(['name' => 'Ani', 'email' => 'ani@example.com']);
 
-        Board::factory(3)
+        $boards = Board::factory(3)
             ->for($test)
             ->has(Task::factory()->count(6))
             ->create();
+
+        // Budi & Ani are members of every board, so they can be assigned tasks.
+        $boards->each(fn (Board $board) => $board->members()->sync([$budi->id, $ani->id]));
 
         // Assign a spread of tasks so assignee-based demos have data.
         Task::query()->inRandomOrder()->limit(9)->get()
