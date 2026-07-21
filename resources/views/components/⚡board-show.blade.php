@@ -51,6 +51,8 @@ new #[Layout('components.layouts.app')] class extends Component
 
         $this->reset('title', 'priority');
         $this->priority = 'medium';
+
+        $this->dispatch('task-created');
     }
 
     public function updateStatus(int $taskId, string $status, TaskService $tasks): void
@@ -122,9 +124,10 @@ new #[Layout('components.layouts.app')] class extends Component
 ?>
 
 <div class="flex h-[calc(100vh-3rem)] flex-col"
-    x-data="{ open: false }"
+    x-data="{ open: false, addOpen: false }"
     @open-task.window="open = true"
-    @close-task.window="open = false">
+    @close-task.window="open = false"
+    @task-created.window="addOpen = false">
     {{-- Board header --}}
     <div class="border-b border-neutral-200 bg-white">
     <div class="mx-auto flex max-w-7xl flex-wrap items-center gap-x-3 gap-y-2 px-6 py-2.5">
@@ -136,21 +139,10 @@ new #[Layout('components.layouts.app')] class extends Component
             <span class="hidden text-neutral-400 md:inline">{{ $board->description }}</span>
         @endif
 
-        <form wire:submit="addTask" class="ml-auto flex items-center gap-2">
-            <input type="text" wire:model="title" placeholder="Task baru…"
-                class="w-40 rounded-md border border-neutral-200 bg-white px-2.5 py-1.5 text-neutral-800 placeholder:text-neutral-400 focus:border-neutral-400 focus:outline-none sm:w-52">
-            <select wire:model="priority"
-                class="rounded-md border border-neutral-200 bg-white px-2 py-1.5 text-neutral-600 focus:border-neutral-400 focus:outline-none">
-                @foreach (TaskPriority::cases() as $p)
-                    <option value="{{ $p->value }}">{{ $p->label() }}</option>
-                @endforeach
-            </select>
-            <button type="submit"
-                class="rounded-md bg-neutral-900 px-3 py-1.5 font-medium text-white hover:bg-neutral-700">
-                Tambah
-            </button>
-        </form>
-        @error('title') <p class="w-full text-xs text-red-600">{{ $message }}</p> @enderror
+        <button @click="addOpen = true"
+            class="ml-auto rounded-md bg-neutral-900 px-3 py-1.5 font-medium text-white hover:bg-neutral-700">
+            Task baru
+        </button>
     </div>
     </div>
 
@@ -224,6 +216,46 @@ new #[Layout('components.layouts.app')] class extends Component
                 </div>
             </div>
         @endforeach
+    </div>
+
+    {{-- Add task modal --}}
+    <div x-cloak x-show="addOpen" @keydown.escape.window="addOpen = false"
+        class="fixed inset-0 z-30 flex items-start justify-center p-4 pt-24">
+        <div class="fixed inset-0 bg-neutral-900/30" @click="addOpen = false"></div>
+
+        <div x-show="addOpen"
+            x-transition:enter="transition ease-out duration-150"
+            x-transition:enter-start="opacity-0 translate-y-1"
+            x-transition:enter-end="opacity-100 translate-y-0"
+            class="relative w-full max-w-md rounded-lg border border-neutral-200 bg-white p-5 shadow-lg">
+            <h2 class="mb-4 font-semibold text-neutral-900">Task baru</h2>
+
+            <form wire:submit="addTask" class="space-y-3">
+                <div>
+                    <label class="mb-1 block text-neutral-500">Judul</label>
+                    <input type="text" wire:model="title" placeholder="mis. Perbaiki bug login"
+                        x-ref="addTitle" x-effect="if (addOpen) $nextTick(() => $refs.addTitle.focus())"
+                        class="w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-neutral-800 placeholder:text-neutral-400 focus:border-neutral-400 focus:outline-none">
+                    @error('title') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+                </div>
+                <div>
+                    <label class="mb-1 block text-neutral-500">Prioritas</label>
+                    <select wire:model="priority"
+                        class="w-full rounded-md border border-neutral-200 bg-white px-2 py-2 text-neutral-700 focus:border-neutral-400 focus:outline-none">
+                        @foreach (TaskPriority::cases() as $p)
+                            <option value="{{ $p->value }}">{{ $p->label() }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="mt-5 flex justify-end gap-2">
+                    <button type="button" @click="addOpen = false"
+                        class="rounded-md border border-neutral-200 px-3 py-1.5 font-medium text-neutral-600 hover:bg-neutral-100">Batal</button>
+                    <button type="submit"
+                        class="rounded-md bg-neutral-900 px-3 py-1.5 font-medium text-white hover:bg-neutral-700">Tambah task</button>
+                </div>
+            </form>
+        </div>
     </div>
 
     {{-- Task detail modal --}}
