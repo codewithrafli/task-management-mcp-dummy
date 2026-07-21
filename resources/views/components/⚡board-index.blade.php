@@ -18,7 +18,10 @@ new #[Layout('components.layouts.app')] class extends Component
     {
         $data = $this->validate();
 
-        $boards->create($data);
+        $boards->create([
+            ...$data,
+            'user_id' => auth()->id(),
+        ]);
 
         $this->reset('name', 'description');
 
@@ -27,12 +30,14 @@ new #[Layout('components.layouts.app')] class extends Component
 
     public function delete(Board $board, BoardService $boards): void
     {
+        $this->authorize('delete', $board);
+
         $boards->delete($board);
     }
 
     public function with(BoardService $boards): array
     {
-        return ['boards' => $boards->all()];
+        return ['boards' => $boards->forUser(auth()->user())];
     }
 };
 ?>

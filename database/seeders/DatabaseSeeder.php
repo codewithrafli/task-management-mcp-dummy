@@ -32,6 +32,7 @@ class DatabaseSeeder extends Seeder
         $ani = User::factory()->create(['name' => 'Ani', 'email' => 'ani@example.com']);
 
         Board::factory(3)
+            ->for($test)
             ->has(Task::factory()->count(6))
             ->create();
 

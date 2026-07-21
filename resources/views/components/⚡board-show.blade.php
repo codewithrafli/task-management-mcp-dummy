@@ -35,6 +35,8 @@ new #[Layout('components.layouts.app')] class extends Component
 
     public function mount(Board $board): void
     {
+        $this->authorize('view', $board);
+
         $this->board = $board;
     }
 
@@ -55,11 +57,20 @@ new #[Layout('components.layouts.app')] class extends Component
         $this->dispatch('task-created');
     }
 
-    public function updateStatus(int $taskId, string $status, TaskService $tasks): void
+    /**
+     * @param  array<int, int|string>  $orderedIds
+     */
+    public function reorderColumn(string $status, array $orderedIds, TaskService $tasks): void
     {
-        $task = Task::where('board_id', $this->board->id)->findOrFail($taskId);
+        // Only touch tasks that actually belong to this board.
+        $ids = Task::where('board_id', $this->board->id)
+            ->whereIn('id', $orderedIds)
+            ->pluck('id')
+            ->all();
 
-        $tasks->changeStatus($task, TaskStatus::from($status));
+        $ordered = array_values(array_filter($orderedIds, fn ($id) => in_array((int) $id, $ids, false)));
+
+        $tasks->reorder($this->board, TaskStatus::from($status), $ordered);
     }
 
     public function openTask(int $taskId): void
@@ -168,9 +179,11 @@ new #[Layout('components.layouts.app')] class extends Component
                         group: 'tasks',
                         animation: 150,
                         ghostClass: 'opacity-40',
-                        onAdd: (e) => $wire.updateStatus(e.item.dataset.id, '{{ $column->value }}'),
+                        onAdd: (e) => $wire.reorderColumn(e.to.dataset.status, [...e.to.children].map(c => c.dataset.id).filter(Boolean)),
+                        onUpdate: (e) => $wire.reorderColumn(e.to.dataset.status, [...e.to.children].map(c => c.dataset.id).filter(Boolean)),
                     })"
                     x-ref="list"
+                    data-status="{{ $column->value }}"
                     class="flex-1 space-y-1.5 overflow-y-auto rounded-lg bg-neutral-100/70 p-1.5">
                     @foreach ($tasksByStatus->get($column->value, []) as $task)
                         @php

@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Board;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
 
 class BoardService
@@ -10,6 +11,14 @@ class BoardService
     public function all(): Collection
     {
         return Board::withCount('tasks')->latest()->get();
+    }
+
+    /**
+     * Boards owned by a given user (used by the web UI).
+     */
+    public function forUser(User $user): Collection
+    {
+        return Board::ownedBy($user)->withCount('tasks')->latest()->get();
     }
 
     public function create(array $data): Board

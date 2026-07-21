@@ -20,9 +20,12 @@ class CreateBoardTool extends Tool
     {
         $validated = $request->validate((new StoreBoardRequest)->rules());
 
-        $board = $this->boards->create($validated);
+        $board = $this->boards->create([
+            ...$validated,
+            'user_id' => $request->user()?->id,
+        ]);
 
-        return Response::text(sprintf('Board #%d "%s" created.', $board->id, $board->name));
+        return Response::text(sprintf('Board %s "%s" created.', $board->code, $board->name));
     }
 
     /**

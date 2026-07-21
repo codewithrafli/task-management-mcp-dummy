@@ -33,6 +33,11 @@ class User extends Authenticatable
         ];
     }
 
+    public function boards(): HasMany
+    {
+        return $this->hasMany(Board::class);
+    }
+
     public function assignedTasks(): HasMany
     {
         return $this->hasMany(Task::class, 'assignee_id');

@@ -7,6 +7,7 @@ use App\Models\Board;
 use App\Models\Task;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\DB;
 
 class TaskService
 {
@@ -42,6 +43,25 @@ class TaskService
             'board_id' => $board->id,
             'position' => $position ?? (int) Task::where('board_id', $board->id)->max('position') + 1,
         ]);
+    }
+
+    /**
+     * Persist the order (and status) of a column after a drag-and-drop.
+     *
+     * @param  array<int, int|string>  $orderedIds
+     */
+    public function reorder(Board $board, TaskStatus $status, array $orderedIds): void
+    {
+        DB::transaction(function () use ($board, $status, $orderedIds) {
+            foreach (array_values($orderedIds) as $index => $id) {
+                Task::where('board_id', $board->id)
+                    ->whereKey($id)
+                    ->update([
+                        'status' => $status->value,
+                        'position' => $index + 1,
+                    ]);
+            }
+        });
     }
 
     public function search(string $term, ?Board $board = null): Collection
