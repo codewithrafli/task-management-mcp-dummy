@@ -26,6 +26,7 @@ class TaskFactory extends Factory
             'description' => fake()->optional()->paragraph(),
             'status' => fake()->randomElement(TaskStatus::values()),
             'priority' => fake()->randomElement(TaskPriority::values()),
+            'due_date' => fake()->optional()->dateTimeBetween('-1 week', '+3 weeks')?->format('Y-m-d'),
             'position' => fake()->numberBetween(1, 20),
         ];
     }

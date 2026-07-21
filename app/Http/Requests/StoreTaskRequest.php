@@ -21,10 +21,12 @@ class StoreTaskRequest extends FormRequest
     {
         return [
             'board_id' => ['required', 'integer', 'exists:boards,id'],
+            'assignee_id' => ['nullable', 'integer', 'exists:users,id'],
             'title' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'status' => ['nullable', Rule::in(TaskStatus::values())],
             'priority' => ['nullable', Rule::in(TaskPriority::values())],
+            'due_date' => ['nullable', 'date'],
         ];
     }
 }

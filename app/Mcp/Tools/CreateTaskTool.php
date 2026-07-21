@@ -25,10 +25,12 @@ class CreateTaskTool extends Tool
 
         $task = $this->tasks->create([
             'board_id' => $validated['board_id'],
+            'assignee_id' => $validated['assignee_id'] ?? null,
             'title' => $validated['title'],
             'description' => $validated['description'] ?? null,
             'status' => $validated['status'] ?? TaskStatus::Todo->value,
             'priority' => $validated['priority'] ?? TaskPriority::Medium->value,
+            'due_date' => $validated['due_date'] ?? null,
         ]);
 
         $board = Board::find($validated['board_id']);
@@ -52,11 +54,15 @@ class CreateTaskTool extends Tool
             'board_id' => $schema->integer()
                 ->description('The id of the board the task belongs to.')
                 ->required(),
+            'assignee_id' => $schema->integer()
+                ->description('Optional id of the user this task is assigned to.'),
             'title' => $schema->string()
                 ->description('The task title.')
                 ->required(),
             'description' => $schema->string()
                 ->description('Optional longer description of the task.'),
+            'due_date' => $schema->string()
+                ->description('Optional due date (YYYY-MM-DD).'),
             'status' => $schema->string()
                 ->description('One of: '.implode(', ', TaskStatus::values()).'. Defaults to todo.'),
             'priority' => $schema->string()

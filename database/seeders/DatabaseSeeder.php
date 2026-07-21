@@ -25,14 +25,23 @@ class DatabaseSeeder extends Seeder
             app(ClientRepository::class)->createPersonalAccessGrantClient('MCP Personal Access Client');
         }
 
-        User::factory()->create([
+        $test = User::factory()->create([
             'name' => 'Test User',
             'email' => 'test@example.com',
             'is_admin' => true,
         ]);
 
+        $budi = User::factory()->create(['name' => 'Budi', 'email' => 'budi@example.com']);
+        $ani = User::factory()->create(['name' => 'Ani', 'email' => 'ani@example.com']);
+
         Board::factory(3)
             ->has(Task::factory()->count(6))
             ->create();
+
+        // Assign a spread of tasks so assignee-based demos have data.
+        Task::query()->inRandomOrder()->limit(9)->get()
+            ->each(fn (Task $task) => $task->update([
+                'assignee_id' => fake()->randomElement([$test->id, $budi->id, $ani->id]),
+            ]));
     }
 }

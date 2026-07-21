@@ -15,10 +15,12 @@ class Task extends Model
 
     protected $fillable = [
         'board_id',
+        'assignee_id',
         'title',
         'description',
         'status',
         'priority',
+        'due_date',
         'position',
     ];
 
@@ -27,6 +29,7 @@ class Task extends Model
         return [
             'status' => TaskStatus::class,
             'priority' => TaskPriority::class,
+            'due_date' => 'date',
             'position' => 'integer',
         ];
     }
@@ -34,6 +37,18 @@ class Task extends Model
     public function board(): BelongsTo
     {
         return $this->belongsTo(Board::class);
+    }
+
+    public function assignee(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'assignee_id');
+    }
+
+    public function scopeOverdue(Builder $query): Builder
+    {
+        return $query->whereNotNull('due_date')
+            ->whereDate('due_date', '<', now())
+            ->where('status', '!=', TaskStatus::Done->value);
     }
 
     public function scopeStatus(Builder $query, TaskStatus $status): Builder

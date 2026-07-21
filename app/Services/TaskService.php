@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Enums\TaskStatus;
 use App\Models\Board;
 use App\Models\Task;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
 
 class TaskService
@@ -28,6 +29,11 @@ class TaskService
     public function changeStatus(Task $task, TaskStatus $status): Task
     {
         return $this->update($task, ['status' => $status->value]);
+    }
+
+    public function assign(Task $task, ?User $user): Task
+    {
+        return $this->update($task, ['assignee_id' => $user?->id]);
     }
 
     public function move(Task $task, Board $board, ?int $position = null): Task
