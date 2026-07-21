@@ -36,11 +36,23 @@ new #[Layout('components.layouts.app')] class extends Component
     // Member invite state.
     public string $inviteEmail = '';
 
+    // Board settings (rename) state.
+    public string $boardName = '';
+
+    public string $boardDescription = '';
+
+    // Filters.
+    public string $filterAssignee = 'all'; // all | mine | <user id>
+
+    public string $filterPriority = 'all';
+
     public function mount(Board $board): void
     {
         $this->authorize('view', $board);
 
         $this->board = $board;
+        $this->boardName = $board->name;
+        $this->boardDescription = (string) $board->description;
     }
 
     public function addTask(TaskService $tasks): void
@@ -124,6 +136,23 @@ new #[Layout('components.layouts.app')] class extends Component
         }
     }
 
+    public function saveBoard(): void
+    {
+        $this->authorize('update', $this->board);
+
+        $data = $this->validate([
+            'boardName' => ['required', 'string', 'max:255'],
+            'boardDescription' => ['nullable', 'string'],
+        ]);
+
+        $this->board->update([
+            'name' => $data['boardName'],
+            'description' => $data['boardDescription'] ?: null,
+        ]);
+
+        $this->dispatch('board-saved');
+    }
+
     public function invite(): void
     {
         $this->authorize('manageMembers', $this->board);
@@ -158,30 +187,44 @@ new #[Layout('components.layouts.app')] class extends Component
     {
         $this->board->loadMissing('members');
 
-        $tasks = $this->board->tasks()->with('assignee')->orderBy('position')->get()->groupBy(fn ($t) => $t->status->value);
+        $tasks = $this->board->tasks()
+            ->with('assignee')
+            ->when($this->filterAssignee === 'mine', fn ($q) => $q->where('assignee_id', auth()->id()))
+            ->when(is_numeric($this->filterAssignee), fn ($q) => $q->where('assignee_id', (int) $this->filterAssignee))
+            ->when($this->filterPriority !== 'all', fn ($q) => $q->where('priority', $this->filterPriority))
+            ->orderBy('position')
+            ->get()
+            ->groupBy(fn ($t) => $t->status->value);
 
         return [
             'columns' => TaskStatus::cases(),
             'tasksByStatus' => $tasks,
             'team' => $this->board->team(),
             'isOwner' => $this->board->user_id === auth()->id(),
+            'filterActive' => $this->filterAssignee !== 'all' || $this->filterPriority !== 'all',
         ];
     }
 };
 ?>
 
 <div class="flex h-[calc(100vh-3rem)] flex-col"
-    x-data="{ open: false, addOpen: false, membersOpen: false }"
+    x-data="{ open: false, addOpen: false, membersOpen: false, settingsOpen: false }"
     @open-task.window="open = true"
     @close-task.window="open = false"
-    @task-created.window="addOpen = false">
+    @task-created.window="addOpen = false"
+    @board-saved.window="settingsOpen = false">
     {{-- Board header --}}
     <div class="border-b border-neutral-200 bg-white">
     <div class="mx-auto flex max-w-7xl flex-wrap items-center gap-x-3 gap-y-2 px-6 py-2.5">
         <a href="{{ route('boards.index') }}" class="text-neutral-400 hover:text-neutral-700">Boards</a>
         <span class="text-neutral-300">/</span>
         <span class="font-mono text-xs text-neutral-400">{{ $board->code }}</span>
-        <h1 class="font-semibold text-neutral-900">{{ $board->name }}</h1>
+        <button @click="settingsOpen = true" class="group/edit flex items-center gap-1.5">
+            <span class="font-semibold text-neutral-900 group-hover/edit:text-neutral-600">{{ $board->name }}</span>
+            <svg class="h-3.5 w-3.5 text-neutral-300 group-hover/edit:text-neutral-500" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6">
+                <path d="M4 13.5V16h2.5l7-7L11 6.5l-7 7zM12.5 5l2.5 2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        </button>
         @if ($board->description)
             <span class="hidden text-neutral-400 md:inline">{{ $board->description }}</span>
         @endif
@@ -209,6 +252,40 @@ new #[Layout('components.layouts.app')] class extends Component
             </button>
         </div>
     </div>
+    </div>
+
+    {{-- Filter bar --}}
+    <div class="border-b border-neutral-200 bg-white">
+        <div class="mx-auto flex max-w-7xl flex-wrap items-center gap-2 px-6 py-2 text-neutral-600">
+            <button wire:click="$set('filterAssignee', @js($filterAssignee === 'mine' ? 'all' : 'mine'))"
+                @class([
+                    'rounded-md border px-2.5 py-1 font-medium',
+                    'border-neutral-900 bg-neutral-900 text-white' => $filterAssignee === 'mine',
+                    'border-neutral-200 hover:bg-neutral-100' => $filterAssignee !== 'mine',
+                ])>Task saya</button>
+
+            <select wire:model.live="filterAssignee"
+                class="rounded-md border border-neutral-200 bg-white px-2 py-1 focus:border-neutral-400 focus:outline-none">
+                <option value="all">Semua assignee</option>
+                <option value="mine">Task saya</option>
+                @foreach ($team as $u)
+                    <option value="{{ $u->id }}">{{ $u->name }}</option>
+                @endforeach
+            </select>
+
+            <select wire:model.live="filterPriority"
+                class="rounded-md border border-neutral-200 bg-white px-2 py-1 focus:border-neutral-400 focus:outline-none">
+                <option value="all">Semua prioritas</option>
+                @foreach (TaskPriority::cases() as $p)
+                    <option value="{{ $p->value }}">{{ $p->label() }}</option>
+                @endforeach
+            </select>
+
+            @if ($filterActive)
+                <button wire:click="$set('filterAssignee', 'all'); $set('filterPriority', 'all')"
+                    class="text-neutral-400 hover:text-neutral-700">Reset</button>
+            @endif
+        </div>
     </div>
 
     {{-- Columns --}}
@@ -283,6 +360,41 @@ new #[Layout('components.layouts.app')] class extends Component
                 </div>
             </div>
         @endforeach
+    </div>
+
+    {{-- Board settings modal --}}
+    <div x-cloak x-show="settingsOpen" @keydown.escape.window="settingsOpen = false"
+        class="fixed inset-0 z-30 flex items-start justify-center p-4 pt-24">
+        <div class="fixed inset-0 bg-neutral-900/30" @click="settingsOpen = false"></div>
+
+        <div x-show="settingsOpen"
+            x-transition:enter="transition ease-out duration-150"
+            x-transition:enter-start="opacity-0 translate-y-1"
+            x-transition:enter-end="opacity-100 translate-y-0"
+            class="relative w-full max-w-md rounded-lg border border-neutral-200 bg-white p-5 shadow-lg">
+            <h2 class="mb-4 font-semibold text-neutral-900">Pengaturan board</h2>
+
+            <form wire:submit="saveBoard" class="space-y-3">
+                <div>
+                    <label class="mb-1 block text-neutral-500">Nama</label>
+                    <input type="text" wire:model="boardName"
+                        class="w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-neutral-800 focus:border-neutral-400 focus:outline-none">
+                    @error('boardName') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+                </div>
+                <div>
+                    <label class="mb-1 block text-neutral-500">Deskripsi</label>
+                    <input type="text" wire:model="boardDescription"
+                        class="w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-neutral-800 focus:border-neutral-400 focus:outline-none">
+                </div>
+
+                <div class="mt-5 flex justify-end gap-2">
+                    <button type="button" @click="settingsOpen = false"
+                        class="rounded-md border border-neutral-200 px-3 py-1.5 font-medium text-neutral-600 hover:bg-neutral-100">Batal</button>
+                    <button type="submit"
+                        class="rounded-md bg-neutral-900 px-3 py-1.5 font-medium text-white hover:bg-neutral-700">Simpan</button>
+                </div>
+            </form>
+        </div>
     </div>
 
     {{-- Members modal --}}

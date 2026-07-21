@@ -95,6 +95,38 @@ it('ignores tasks from other boards when reordering', function () {
     expect($foreign->refresh()->status)->toBe(TaskStatus::Todo);
 });
 
+it('renames the board', function () {
+    Livewire::test('board-show', ['board' => $this->board])
+        ->set('boardName', 'Renamed Board')
+        ->set('boardDescription', 'New desc')
+        ->call('saveBoard')
+        ->assertHasNoErrors();
+
+    expect($this->board->refresh())
+        ->name->toBe('Renamed Board')
+        ->description->toBe('New desc');
+});
+
+it('filters the board to only my tasks', function () {
+    $mine = Task::factory()->for($this->board)->create(['assignee_id' => $this->user->id, 'title' => 'My task']);
+    $other = Task::factory()->for($this->board)->create(['assignee_id' => null, 'title' => 'Other task']);
+
+    Livewire::test('board-show', ['board' => $this->board])
+        ->set('filterAssignee', 'mine')
+        ->assertSee('My task')
+        ->assertDontSee('Other task');
+});
+
+it('filters the board by priority', function () {
+    Task::factory()->for($this->board)->create(['priority' => 'high', 'title' => 'Urgent']);
+    Task::factory()->for($this->board)->create(['priority' => 'low', 'title' => 'Whenever']);
+
+    Livewire::test('board-show', ['board' => $this->board])
+        ->set('filterPriority', 'high')
+        ->assertSee('Urgent')
+        ->assertDontSee('Whenever');
+});
+
 it('updates a task via the detail modal', function () {
     $task = Task::factory()->for($this->board)->create(['status' => TaskStatus::Todo->value]);
 
