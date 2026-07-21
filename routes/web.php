@@ -2,6 +2,5 @@
 
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('welcome');
-});
+Route::livewire('/', 'board-index')->name('boards.index');
+Route::livewire('/boards/{board}', 'board-show')->name('boards.show');
