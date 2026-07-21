@@ -1,0 +1,15 @@
+# Codex CLI — tambahkan ke ~/.codex/config.toml
+# Lebih mudah pakai perintah:
+#   codex mcp add task-management --url http://127.0.0.1:8000/mcp/task-management
+#   codex mcp login task-management   # OAuth (server harus nyala)
+#
+# Atau tulis manual:
+
+# --- Varian URL / OAuth (server harus nyala: php artisan serve) ---
+[mcp_servers.task-management]
+url = "http://127.0.0.1:8000/mcp/task-management"
+
+# --- Varian stdio (tanpa server nyala) — pakai salah satu saja ---
+# [mcp_servers.task-management]
+# command = "php"
+# args = ["/absolute/path/to/mcp-dummy/artisan", "mcp:start", "task-management"]

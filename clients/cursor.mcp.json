@@ -1,0 +1,18 @@
+{
+  "//": "Cursor — salin ke .cursor/mcp.json (per-project) atau ~/.cursor/mcp.json (global).",
+  "//stdio": "Varian stdio (tanpa server nyala, tanpa auth). Ganti path artisan ke absolut.",
+  "//http": "Varian URL/OAuth ada di bawah — pakai salah satu, hapus yang lain.",
+  "mcpServers": {
+    "task-management": {
+      "command": "php",
+      "args": [
+        "/absolute/path/to/mcp-dummy/artisan",
+        "mcp:start",
+        "task-management"
+      ]
+    },
+    "task-management-http": {
+      "url": "http://127.0.0.1:8000/mcp/task-management"
+    }
+  }
+}
