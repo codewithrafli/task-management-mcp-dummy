@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
+use Laravel\Passport\Passport;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -34,5 +35,8 @@ class AppServiceProvider extends ServiceProvider
 
         // Authorization: only admins may run destructive MCP tools (e.g. deleting tasks).
         Gate::define('delete-tasks', fn (User $user) => $user->is_admin);
+
+        // OAuth 2.1 consent screen (Passport 13 ships no view by default).
+        Passport::authorizationView('oauth.authorize');
     }
 }
