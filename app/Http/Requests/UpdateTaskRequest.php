@@ -24,6 +24,7 @@ class UpdateTaskRequest extends FormRequest
             'description' => ['nullable', 'string'],
             'status' => ['sometimes', 'required', Rule::in(TaskStatus::values())],
             'priority' => ['sometimes', 'required', Rule::in(TaskPriority::values())],
+            'due_date' => ['sometimes', 'nullable', 'date'],
         ];
     }
 }
