@@ -7,6 +7,7 @@ use App\Mcp\Concerns\InteractsWithBoards;
 use App\Services\TaskService;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\JsonSchema\Types\Type;
+use Illuminate\Validation\Rule;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Attributes\Description;
@@ -25,7 +26,7 @@ class UpdateTaskStatusTool extends Tool
     {
         $validated = $request->validate([
             'task' => ['required'],
-            'status' => ['required', 'in:'.implode(',', TaskStatus::values())],
+            'status' => ['required', Rule::in(TaskStatus::values())],
         ]);
 
         $task = $this->resolveTask($validated['task'], $request->user());

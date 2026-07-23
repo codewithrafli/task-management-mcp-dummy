@@ -8,6 +8,7 @@ use App\Mcp\Concerns\InteractsWithBoards;
 use App\Models\Task;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\JsonSchema\Types\Type;
+use Illuminate\Validation\Rule;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Attributes\Description;
@@ -25,8 +26,8 @@ class ListTasksTool extends Tool
         $validated = $request->validate([
             'board_id' => ['nullable', 'integer', 'exists:boards,id'],
             'assignee_id' => ['nullable', 'integer', 'exists:users,id'],
-            'status' => ['nullable', 'in:'.implode(',', TaskStatus::values())],
-            'priority' => ['nullable', 'in:'.implode(',', TaskPriority::values())],
+            'status' => ['nullable', Rule::in(TaskStatus::values())],
+            'priority' => ['nullable', Rule::in(TaskPriority::values())],
             'overdue' => ['nullable', 'boolean'],
             'page' => ['nullable', 'integer', 'min:1'],
             'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
