@@ -24,13 +24,9 @@ class CreateTaskTool extends Tool
         $validated = $request->validate((new StoreTaskRequest)->rules());
 
         $task = $this->tasks->create([
-            'board_id' => $validated['board_id'],
-            'assignee_id' => $validated['assignee_id'] ?? null,
-            'title' => $validated['title'],
-            'description' => $validated['description'] ?? null,
-            'status' => $validated['status'] ?? TaskStatus::Todo->value,
-            'priority' => $validated['priority'] ?? TaskPriority::Medium->value,
-            'due_date' => $validated['due_date'] ?? null,
+            'status' => TaskStatus::Todo->value,
+            'priority' => TaskPriority::Medium->value,
+            ...$validated,
         ]);
 
         $board = Board::find($validated['board_id']);
