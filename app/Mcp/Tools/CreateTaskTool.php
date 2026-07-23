@@ -62,9 +62,13 @@ class CreateTaskTool extends Tool
             'description' => $schema->string()
                 ->description('Optional longer description of the task.'),
             'status' => $schema->string()
-                ->description('One of: '.implode(', ', TaskStatus::values()).'. Defaults to todo.'),
+                ->enum(TaskStatus::values())
+                ->default(TaskStatus::Todo->value)
+                ->description('The task status.'),
             'priority' => $schema->string()
-                ->description('One of: '.implode(', ', TaskPriority::values()).'. Defaults to medium.'),
+                ->enum(TaskPriority::values())
+                ->default(TaskPriority::Medium->value)
+                ->description('The task priority.'),
             'due_date' => $schema->string()
                 ->description('Optional due date (YYYY-MM-DD).'),
         ];
