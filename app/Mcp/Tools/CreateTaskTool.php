@@ -36,13 +36,8 @@ class CreateTaskTool extends Tool
         }
 
         $task = $this->tasks->create([
-            'board_id' => $board->id,
-            'assignee_id' => $validated['assignee_id'] ?? null,
-            'title' => $validated['title'],
-            'description' => $validated['description'] ?? null,
-            'status' => $validated['status'] ?? TaskStatus::Todo->value,
-            'priority' => $validated['priority'] ?? TaskPriority::Medium->value,
-            'due_date' => $validated['due_date'] ?? null,
+            ...$validated,
+            'board_id' => $board->id, // override for scoping — never trust the raw input id
         ]);
 
         return Response::text(sprintf(

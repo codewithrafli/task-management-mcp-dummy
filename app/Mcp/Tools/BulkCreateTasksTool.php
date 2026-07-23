@@ -2,7 +2,6 @@
 
 namespace App\Mcp\Tools;
 
-use App\Enums\TaskStatus;
 use App\Mcp\Concerns\InteractsWithBoards;
 use App\Services\TaskService;
 use Generator;
@@ -47,7 +46,6 @@ class BulkCreateTasksTool extends Tool
             $task = $this->tasks->create([
                 'board_id' => $validated['board_id'],
                 'title' => $title,
-                'status' => TaskStatus::Todo->value,
             ]);
 
             $created[] = $task->id;
