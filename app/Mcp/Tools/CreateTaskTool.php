@@ -4,6 +4,7 @@ namespace App\Mcp\Tools;
 
 use App\Enums\TaskPriority;
 use App\Enums\TaskStatus;
+use App\Http\Requests\StoreTaskRequest;
 use App\Models\Board;
 use App\Models\Task;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
@@ -18,20 +19,16 @@ class CreateTaskTool extends Tool
 {
     public function handle(Request $request): Response
     {
-        $validated = $request->validate([
-            'board_id' => ['required', 'integer', 'exists:boards,id'],
-            'title' => ['required', 'string', 'max:255'],
-            'description' => ['nullable', 'string'],
-            'status' => ['nullable', 'in:'.implode(',', TaskStatus::values())],
-            'priority' => ['nullable', 'in:'.implode(',', TaskPriority::values())],
-        ]);
+        $validated = $request->validate((new StoreTaskRequest)->rules());
 
         $task = Task::create([
             'board_id' => $validated['board_id'],
+            'assignee_id' => $validated['assignee_id'] ?? null,
             'title' => $validated['title'],
             'description' => $validated['description'] ?? null,
             'status' => $validated['status'] ?? TaskStatus::Todo->value,
             'priority' => $validated['priority'] ?? TaskPriority::Medium->value,
+            'due_date' => $validated['due_date'] ?? null,
         ]);
 
         $board = Board::find($validated['board_id']);
@@ -55,6 +52,8 @@ class CreateTaskTool extends Tool
             'board_id' => $schema->integer()
                 ->description('The id of the board the task belongs to.')
                 ->required(),
+            'assignee_id' => $schema->integer()
+                ->description('Optional id of the user this task is assigned to.'),
             'title' => $schema->string()
                 ->description('The task title.')
                 ->required(),
@@ -64,6 +63,8 @@ class CreateTaskTool extends Tool
                 ->description('One of: '.implode(', ', TaskStatus::values()).'. Defaults to todo.'),
             'priority' => $schema->string()
                 ->description('One of: '.implode(', ', TaskPriority::values()).'. Defaults to medium.'),
+            'due_date' => $schema->string()
+                ->description('Optional due date (YYYY-MM-DD).'),
         ];
     }
 }
