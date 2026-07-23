@@ -4,6 +4,7 @@ namespace App\Mcp\Tools;
 
 use App\Mcp\Concerns\InteractsWithBoards;
 use App\Models\User;
+use App\Services\BoardService;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\JsonSchema\Types\Type;
 use Laravel\Mcp\Request;
@@ -15,6 +16,8 @@ use Laravel\Mcp\Server\Tool;
 class InviteMemberTool extends Tool
 {
     use InteractsWithBoards;
+
+    public function __construct(private readonly BoardService $boards) {}
 
     public function handle(Request $request): Response
     {
@@ -45,7 +48,7 @@ class InviteMemberTool extends Tool
             return Response::error("{$user->name} already owns this board.");
         }
 
-        $board->members()->syncWithoutDetaching([$user->id]);
+        $this->boards->addMember($board, $user);
 
         return Response::text(sprintf('%s (%s) was added to board %s.', $user->name, $user->email, $board->code));
     }
