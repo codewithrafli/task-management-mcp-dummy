@@ -2,6 +2,7 @@
 
 namespace App\Mcp\Tools;
 
+use App\Http\Requests\UpdateBoardRequest;
 use App\Mcp\Concerns\InteractsWithBoards;
 use App\Services\BoardService;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
@@ -24,8 +25,7 @@ class RenameBoardTool extends Tool
     {
         $validated = $request->validate([
             'board' => ['required'],
-            'name' => ['sometimes', 'required', 'string', 'max:255'],
-            'description' => ['sometimes', 'nullable', 'string'],
+            ...(new UpdateBoardRequest)->rules(),
         ]);
 
         $board = $this->resolveBoard($validated['board'], $request->user());

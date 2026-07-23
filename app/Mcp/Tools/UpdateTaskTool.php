@@ -4,6 +4,7 @@ namespace App\Mcp\Tools;
 
 use App\Enums\TaskPriority;
 use App\Enums\TaskStatus;
+use App\Http\Requests\UpdateTaskRequest;
 use App\Mcp\Concerns\InteractsWithBoards;
 use App\Services\TaskService;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
@@ -26,11 +27,7 @@ class UpdateTaskTool extends Tool
     {
         $validated = $request->validate([
             'task' => ['required'],
-            'title' => ['sometimes', 'required', 'string', 'max:255'],
-            'description' => ['sometimes', 'nullable', 'string'],
-            'status' => ['sometimes', 'required', 'in:'.implode(',', TaskStatus::values())],
-            'priority' => ['sometimes', 'required', 'in:'.implode(',', TaskPriority::values())],
-            'due_date' => ['sometimes', 'nullable', 'date'],
+            ...(new UpdateTaskRequest)->rules(),
         ]);
 
         $task = $this->resolveTask($validated['task'], $request->user());
