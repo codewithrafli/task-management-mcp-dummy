@@ -37,4 +37,12 @@ class BoardService
     {
         $board->delete();
     }
+
+    /**
+     * Add a user as a member of the board (idempotent — no duplicates).
+     */
+    public function addMember(Board $board, User $user): void
+    {
+        $board->members()->syncWithoutDetaching([$user->id]);
+    }
 }
