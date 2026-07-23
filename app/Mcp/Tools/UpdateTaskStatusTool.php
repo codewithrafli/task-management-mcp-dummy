@@ -54,7 +54,8 @@ class UpdateTaskStatusTool extends Tool
                 ->description('The task code (e.g. "SPR-1") or numeric id.')
                 ->required(),
             'status' => $schema->string()
-                ->description('New status. One of: '.implode(', ', TaskStatus::values()).'.')
+                ->enum(TaskStatus::values())
+                ->description('The new task status.')
                 ->required(),
         ];
     }

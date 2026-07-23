@@ -77,8 +77,8 @@ class ListTasksTool extends Tool
             'board_id' => $schema->integer()->description('Filter by board id.'),
             'assignee_id' => $schema->integer()->description('Filter by assignee (user) id.'),
             'overdue' => $schema->boolean()->description('If true, only tasks past their due date and not done.'),
-            'status' => $schema->string()->description('Filter by status: '.implode(', ', TaskStatus::values()).'.'),
-            'priority' => $schema->string()->description('Filter by priority: '.implode(', ', TaskPriority::values()).'.'),
+            'status' => $schema->string()->enum(TaskStatus::values())->description('Filter by status.'),
+            'priority' => $schema->string()->enum(TaskPriority::values())->description('Filter by priority.'),
             'page' => $schema->integer()->description('Page number (default 1).'),
             'per_page' => $schema->integer()->description('Items per page (default 10, max 100).'),
         ];

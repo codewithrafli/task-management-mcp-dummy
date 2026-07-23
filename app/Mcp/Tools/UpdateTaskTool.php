@@ -65,8 +65,8 @@ class UpdateTaskTool extends Tool
                 ->required(),
             'title' => $schema->string()->description('New title.'),
             'description' => $schema->string()->description('New description.'),
-            'status' => $schema->string()->description('New status: '.implode(', ', TaskStatus::values()).'.'),
-            'priority' => $schema->string()->description('New priority: '.implode(', ', TaskPriority::values()).'.'),
+            'status' => $schema->string()->enum(TaskStatus::values())->description('New status.'),
+            'priority' => $schema->string()->enum(TaskPriority::values())->description('New priority.'),
             'due_date' => $schema->string()->description('New due date (YYYY-MM-DD), or empty to clear.'),
         ];
     }
