@@ -3,6 +3,7 @@
 namespace App\Mcp\Tools;
 
 use App\Models\Task;
+use App\Services\TaskService;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\JsonSchema\Types\Type;
 use Laravel\Mcp\Request;
@@ -13,16 +14,15 @@ use Laravel\Mcp\Server\Tool;
 #[Description('Search tasks by keyword in their title or description.')]
 class SearchTaskTool extends Tool
 {
+    public function __construct(private readonly TaskService $tasks) {}
+
     public function handle(Request $request): Response
     {
         $validated = $request->validate([
             'query' => ['required', 'string', 'min:1'],
         ]);
 
-        $results = Task::query()
-            ->search($validated['query'])
-            ->orderBy('position')
-            ->get();
+        $results = $this->tasks->search($validated['query']);
 
         if ($results->isEmpty()) {
             return Response::text('No tasks found for query "'.$validated['query'].'".');

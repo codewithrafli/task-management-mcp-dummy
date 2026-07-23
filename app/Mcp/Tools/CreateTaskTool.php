@@ -6,7 +6,7 @@ use App\Enums\TaskPriority;
 use App\Enums\TaskStatus;
 use App\Http\Requests\StoreTaskRequest;
 use App\Models\Board;
-use App\Models\Task;
+use App\Services\TaskService;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\JsonSchema\Types\Type;
 use Laravel\Mcp\Request;
@@ -17,11 +17,13 @@ use Laravel\Mcp\Server\Tool;
 #[Description('Create a new task inside a board. Returns the created task with its code, status and priority.')]
 class CreateTaskTool extends Tool
 {
+    public function __construct(private readonly TaskService $tasks) {}
+
     public function handle(Request $request): Response
     {
         $validated = $request->validate((new StoreTaskRequest)->rules());
 
-        $task = Task::create([
+        $task = $this->tasks->create([
             'board_id' => $validated['board_id'],
             'assignee_id' => $validated['assignee_id'] ?? null,
             'title' => $validated['title'],

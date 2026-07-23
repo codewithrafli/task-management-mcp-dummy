@@ -4,6 +4,7 @@ namespace App\Mcp\Tools;
 
 use App\Models\Board;
 use App\Models\Task;
+use App\Services\TaskService;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\JsonSchema\Types\Type;
 use Laravel\Mcp\Request;
@@ -14,6 +15,8 @@ use Laravel\Mcp\Server\Tool;
 #[Description('Move a task to a different board.')]
 class MoveTaskTool extends Tool
 {
+    public function __construct(private readonly TaskService $tasks) {}
+
     public function handle(Request $request): Response
     {
         $validated = $request->validate([
@@ -28,7 +31,7 @@ class MoveTaskTool extends Tool
         }
 
         $board = Board::findOrFail($validated['board_id']);
-        $task->update(['board_id' => $board->id]);
+        $task = $this->tasks->move($task, $board);
 
         return Response::text(sprintf('Task %s "%s" moved to board "%s".', $task->code, $task->title, $board->name));
     }

@@ -3,6 +3,7 @@
 namespace App\Mcp\Tools;
 
 use App\Models\Task;
+use App\Services\TaskService;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\JsonSchema\Types\Type;
 use Laravel\Mcp\Request;
@@ -13,6 +14,8 @@ use Laravel\Mcp\Server\Tool;
 #[Description('Permanently delete a task.')]
 class DeleteTaskTool extends Tool
 {
+    public function __construct(private readonly TaskService $tasks) {}
+
     public function handle(Request $request): Response
     {
         $validated = $request->validate([
@@ -27,7 +30,7 @@ class DeleteTaskTool extends Tool
 
         $code = $task->code;
         $title = $task->title;
-        $task->delete();
+        $this->tasks->delete($task);
 
         return Response::text(sprintf('Task %s "%s" deleted.', $code, $title));
     }

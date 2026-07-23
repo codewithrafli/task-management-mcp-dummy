@@ -3,8 +3,8 @@
 namespace App\Mcp\Tools;
 
 use App\Http\Requests\StoreBoardRequest;
-use App\Models\Board;
 use App\Models\User;
+use App\Services\BoardService;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\JsonSchema\Types\Type;
 use Laravel\Mcp\Request;
@@ -15,13 +15,15 @@ use Laravel\Mcp\Server\Tool;
 #[Description('Create a new board to organise tasks.')]
 class CreateBoardTool extends Tool
 {
+    public function __construct(private readonly BoardService $boards) {}
+
     public function handle(Request $request): Response
     {
         $validated = $request->validate((new StoreBoardRequest)->rules());
 
         // Sebelum OAuth, tak ada user yang login lewat MCP — jadi board diberikan ke
         // user pertama (Test User) supaya muncul di UI demo.
-        $board = Board::create([
+        $board = $this->boards->create([
             ...$validated,
             'user_id' => User::query()->value('id'),
         ]);
