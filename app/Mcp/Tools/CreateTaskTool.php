@@ -23,11 +23,7 @@ class CreateTaskTool extends Tool
     {
         $validated = $request->validate((new StoreTaskRequest)->rules());
 
-        $task = $this->tasks->create([
-            'status' => TaskStatus::Todo->value,
-            'priority' => TaskPriority::Medium->value,
-            ...$validated,
-        ]);
+        $task = $this->tasks->create([...$validated]);
 
         $board = Board::find($validated['board_id']);
 
