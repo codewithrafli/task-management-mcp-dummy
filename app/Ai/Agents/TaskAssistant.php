@@ -11,7 +11,7 @@ use Laravel\Ai\Enums\Lab;
 use Laravel\Ai\Promptable;
 use Laravel\Mcp\Client;
 
-#[Provider(Lab::Anthropic)]
+#[Provider(Lab::Gemini)]
 class TaskAssistant implements Agent, Conversational, HasTools
 {
     use Promptable, RemembersConversations;

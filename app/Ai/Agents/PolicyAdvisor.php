@@ -12,7 +12,7 @@ use Laravel\Ai\Enums\Lab;
 use Laravel\Ai\Promptable;
 use Laravel\Ai\Tools\SimilaritySearch;
 
-#[Provider(Lab::Anthropic)]
+#[Provider(Lab::Gemini)]
 class PolicyAdvisor implements Agent, Conversational, HasTools
 {
     use Promptable, RemembersConversations;
