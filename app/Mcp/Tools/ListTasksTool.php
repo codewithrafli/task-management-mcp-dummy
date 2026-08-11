@@ -27,7 +27,7 @@ class ListTasksTool extends Tool
             return Response::text('No tasks found.');
         }
 
-        $lines = $tasks->map(fn(Task $task) => sprintf(
+        $lines = $tasks->map(fn (Task $task) => sprintf(
             '%s [%s/%s] %s (board %d)',
             $task->code,
             $task->status->value,
@@ -36,6 +36,6 @@ class ListTasksTool extends Tool
             $task->board_id,
         ))->implode("\n");
 
-        return Response::text($tasks->count() . ' task(s):' . "\n" . $lines);
+        return Response::text($tasks->count().' task(s):'."\n".$lines);
     }
 }

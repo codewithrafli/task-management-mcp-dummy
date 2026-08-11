@@ -16,6 +16,9 @@
             </a>
             <div class="flex items-center gap-3 text-neutral-500">
                 @auth
+                    <a href="{{ route('ai.chat') }}" class="rounded-md border border-indigo-200 bg-indigo-50 px-2.5 py-1 font-medium text-indigo-600 hover:bg-indigo-100">
+                        🤖 AI Assistant
+                    </a>
                     <span class="hidden sm:inline">{{ auth()->user()->name }}</span>
                     <form method="post" action="{{ route('logout') }}">
                         @csrf

@@ -36,5 +36,7 @@ class DatabaseSeeder extends Seeder
             ->each(fn (Task $task) => $task->update([
                 'assignee_id' => fake()->randomElement([$test->id, $budi->id, $ani->id]),
             ]));
+
+        $this->call(PolicySeeder::class);
     }
 }

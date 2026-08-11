@@ -15,4 +15,12 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middl
 Route::middleware('auth')->group(function () {
     Route::livewire('/', 'board-index')->name('boards.index');
     Route::livewire('/boards/{board}', 'board-show')->name('boards.show');
+    Route::livewire('/ai', 'ai-chat')->name('ai.chat');
 });
+
+// Artisan-style endpoint to embed policy documents (run once / on-demand).
+// Usage: POST /ai/embed-policies  (hanya untuk development/demo)
+Route::post('/ai/embed-policies', function () {
+    \Artisan::call('ai:embed-policies');
+    return response()->json(['message' => 'Policies embedded.']);
+})->middleware('auth');

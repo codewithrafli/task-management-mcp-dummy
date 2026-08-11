@@ -27,15 +27,15 @@ class ListBoardsTool extends Tool
             return Response::text('No boards found.');
         }
 
-        $lines = $boards->map(fn(Board $board) => sprintf(
+        $lines = $boards->map(fn (Board $board) => sprintf(
             '#%d %s [%s] — %d task(s)%s',
             $board->id,
             $board->name,
             $board->code,
             $board->tasks_count,
-            $board->description ? ' — ' . $board->description : '',
+            $board->description ? ' — '.$board->description : '',
         ))->implode("\n");
 
-        return Response::text($boards->count() . ' board(s):' . "\n" . $lines);
+        return Response::text($boards->count().' board(s):'."\n".$lines);
     }
 }
